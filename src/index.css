@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* The two font stacks — change here, applies everywhere */
+    --font-amharic: "Menbere", "Nyala", "Noto Serif Ethiopic", serif;
+    --font-latin: "Inter", system-ui, sans-serif;
+  }
+
+  html {
+    font-family: var(--font-amharic);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  /* Amharic rendering — this is the critical rule */
+  .font-amharic {
+    font-family: var(--font-amharic);
+    font-feature-settings: "kern" 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Latin-only override — for UI chrome */
+  .font-latin {
+    font-family: var(--font-latin);
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-gold-500/50 ring-offset-2 ring-offset-stone-950 rounded-sm;
+  }
+
+  ::selection {
+    @apply bg-gold-500/30 text-stone-50;
+  }
+
+  /* Scrollbar — subtle, dark */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-stone-800 rounded-full;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-stone-700;
+    background-clip: padding-box;
+    border: 3px solid transparent;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+@layer components {
+  /* The canonical reading style — used by verses, commentaries, saints, prayers */
+  .prose-am {
+    font-family: var(--font-amharic);
+    @apply text-verse text-text-primary;
+  }
+
+  .prose-am-sm {
+    font-family: var(--font-amharic);
+    @apply text-verse-sm text-text-secondary;
+  }
+
+  .divider {
+    @apply border-t border-surface-border;
+  }
+}
+
+@layer utilities {
+  .verse-highlighted {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(236, 150, 26, 0.14) 3%,
+      rgba(236, 150, 26, 0.14) 97%,
+      transparent 100%
+    );
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
