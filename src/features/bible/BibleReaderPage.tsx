@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useChapter, useNavigation, type VerseOut } from "@/api/queries/bible";
+import { useHighlightsForChapter, useNotes } from "@/api/queries/user";
 import { BookSidebar } from "@/components/bible/BookSidebar";
 import { ChapterHeader } from "@/components/bible/ChapterHeader";
 import { VerseList } from "@/components/bible/VerseList";
@@ -11,6 +12,7 @@ import { CommentaryPanel } from "@/components/commentary/CommentaryPanel";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useReaderStore } from "@/stores/readerStore";
+import { useAuth } from "@/auth/AuthContext";
 import { cn } from "@/lib/utils";
 import { request } from "@/api/client";
 
@@ -31,18 +33,14 @@ export function BibleReaderPage() {
   const { translationCode } = useReaderStore();
   const { selectedVerseId, selectVerse, commentaryOpen, setCommentaryOpen } =
     useReaderStore();
+  const { isAuthenticated } = useAuth();
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // ------------------------------------------------------------
-  // Defensive: if the "book" param is numeric, it's actually a
-  // verse id (e.g., search commentary links use /bible/{verse_id}).
-  // Resolve it and redirect to the real chapter URL.
-  // ------------------------------------------------------------
+  // Numeric-slug redirect
   useEffect(() => {
     if (!/^\d+$/.test(bookSlug)) return;
     const verseId = Number(bookSlug);
-
     request<{ book: string | null; chapter: number }>(
       `/api/bible/verses/${verseId}`,
     )
@@ -68,14 +66,28 @@ export function BibleReaderPage() {
     isNumericSlug ? undefined : chapter,
   );
 
-  // Reset selected verse when the chapter changes
+  const highlights = useHighlightsForChapter(bookSlug, chapter, {
+    enabled: isAuthenticated && !isNumericSlug,
+  });
+
+  const notesQuery = useNotes({ page: 1, enabled: isAuthenticated });
+
+  const chapterVerseIds = useMemo(
+    () => new Set(chapterQuery.data?.verses.map((v) => v.id) ?? []),
+    [chapterQuery.data],
+  );
+
+  const chapterNotes = useMemo(() => {
+    if (!notesQuery.data?.data) return [];
+    return notesQuery.data.data.filter((n) => chapterVerseIds.has(n.verse_id));
+  }, [notesQuery.data, chapterVerseIds]);
+
+  // Reset selected verse when chapter changes
   useEffect(() => {
     selectVerse(null);
   }, [bookSlug, chapter, selectVerse]);
 
-  // ------------------------------------------------------------
-  // Auto-select and scroll to a verse targeted via ?verse=N
-  // ------------------------------------------------------------
+  // Auto-select verse from ?verse=N
   useEffect(() => {
     if (!targetVerseNumber) return;
     if (!chapterQuery.data) return;
@@ -85,12 +97,10 @@ export function BibleReaderPage() {
     );
     if (!match) return;
 
-    // Select it (triggers the same gold treatment as a click)
     if (selectedVerseId !== match.id) {
       selectVerse(match.id);
     }
 
-    // Scroll it into view, roughly centered
     requestAnimationFrame(() => {
       const el = document.querySelector<HTMLButtonElement>(
         `[data-verse-id="${match.id}"]`,
@@ -98,17 +108,13 @@ export function BibleReaderPage() {
       el?.scrollIntoView({ block: "center", behavior: "smooth" });
     });
 
-    // Clean the query param so refresh doesn't re-scroll and back/forward
-    // returns to the pre-verse URL shape.
     const next = new URLSearchParams(searchParams);
     next.delete("verse");
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetVerseNumber, chapterQuery.data]);
 
-  // ------------------------------------------------------------
   // Keyboard: ← / → for chapter navigation
-  // ------------------------------------------------------------
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (
@@ -137,7 +143,6 @@ export function BibleReaderPage() {
   const selectedVerse =
     chapterQuery.data?.verses.find((v) => v.id === selectedVerseId) ?? null;
 
-  // While redirecting a numeric slug, show a tiny hint instead of blank
   if (isNumericSlug) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -148,14 +153,14 @@ export function BibleReaderPage() {
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-shell">
-      {/* ---------- Left: Book sidebar (desktop) ---------- */}
+      {/* Left: Book sidebar (desktop) */}
       <aside className="hidden w-64 shrink-0 border-r border-surface-border lg:block">
         <div className="sticky top-14 h-[calc(100vh-3.5rem)]">
           <BookSidebar currentSlug={bookSlug} currentChapter={chapter} />
         </div>
       </aside>
 
-      {/* ---------- Center: Reading area ---------- */}
+      {/* Center: Reading area */}
       <main className="min-w-0 flex-1">
         <div className="mx-auto max-w-reading px-5 py-8 md:px-8 md:py-12">
           {/* Mobile toolbar */}
@@ -194,7 +199,7 @@ export function BibleReaderPage() {
           ) : chapterQuery.data.verses.length === 0 ? (
             <EmptyState
               titleAm="ምዕራፉ ባዶ ነው"
-              hintAm={`${chapterQuery.data.book.name_am} ${chapterQuery.data.chapter} ውስጥ ጥቅሶች አልተገኙም። የዚህ ምዕራፍ ውሂብ እስካሁን አልጫነም ይሆናል።`}
+              hintAm={`${chapterQuery.data.book.name_am} ${chapterQuery.data.chapter} ውስጥ ጥቅሶች አልተገኙም።`}
             />
           ) : (
             <>
@@ -202,6 +207,8 @@ export function BibleReaderPage() {
                 verses={chapterQuery.data.verses}
                 selectedVerseId={selectedVerseId}
                 onSelectVerse={handleSelectVerse}
+                highlights={highlights.data ?? []}
+                notes={chapterNotes}
               />
               <ChapterNavigation nav={navQuery.data} />
             </>
@@ -209,7 +216,7 @@ export function BibleReaderPage() {
         </div>
       </main>
 
-      {/* ---------- Right: Commentary panel (desktop) ---------- */}
+      {/* Right: Commentary panel (desktop) */}
       <aside
         className={cn(
           "hidden shrink-0 border-l border-surface-border transition-all duration-300 lg:block",
@@ -226,7 +233,7 @@ export function BibleReaderPage() {
         )}
       </aside>
 
-      {/* ---------- Mobile: Book drawer ---------- */}
+      {/* Mobile: Book drawer */}
       <Dialog.Root open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-sm lg:hidden" />
@@ -243,7 +250,7 @@ export function BibleReaderPage() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      {/* ---------- Mobile: Commentary bottom sheet ---------- */}
+      {/* Mobile: Commentary bottom sheet */}
       {commentaryOpen && selectedVerse && (
         <div className="fixed inset-x-0 bottom-0 z-40 max-h-[75vh] rounded-t-2xl border-t border-surface-border bg-stone-950 lg:hidden animate-slide-up">
           <div className="mx-auto my-2 h-1 w-10 rounded-full bg-stone-700" />
@@ -258,8 +265,6 @@ export function BibleReaderPage() {
     </div>
   );
 }
-
-// ---------- Loading skeletons ----------
 
 function ChapterHeaderSkeleton() {
   return (

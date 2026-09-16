@@ -11,6 +11,7 @@ import { DiscoveryDetailPage } from "@/features/discovery/DiscoveryDetailPage";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { RegisterPage } from "@/features/auth/RegisterPage";
 import { AdminLayout } from "@/features/admin/AdminLayout";
+import { SettingsPage } from "@/features/settings/SettingsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/admin" element={<AdminLayout />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AppShell>

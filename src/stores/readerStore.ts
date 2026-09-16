@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export type TestamentFilter = "OT" | "NT" | "ALL";
+export type ReadingFontSize = "sm" | "md" | "lg" | "xl" | "2xl";
 
 type ReaderState = {
   selectedVerseId: number | null;
@@ -16,9 +17,12 @@ type ReaderState = {
   sidebarTestament: TestamentFilter;
   setSidebarTestament: (t: TestamentFilter) => void;
 
-  // Only one book expanded at a time
   expandedBookSlug: string | null;
   setExpandedBook: (slug: string | null) => void;
+
+  // Reading font size preference
+  fontSize: ReadingFontSize;
+  setFontSize: (size: ReadingFontSize) => void;
 };
 
 export const useReaderStore = create<ReaderState>()(
@@ -38,12 +42,16 @@ export const useReaderStore = create<ReaderState>()(
 
       expandedBookSlug: null,
       setExpandedBook: (slug) => set({ expandedBookSlug: slug }),
+
+      fontSize: "lg",
+      setFontSize: (size) => set({ fontSize: size }),
     }),
     {
       name: "catena-reader",
       partialize: (s) => ({
         translationCode: s.translationCode,
         sidebarTestament: s.sidebarTestament,
+        fontSize: s.fontSize,
       }),
     },
   ),

@@ -27,10 +27,10 @@ export function ChapterHeader({
         <span className="text-text-muted text-sm">{book.name_en}</span>
       </div>
       <h1 className="mt-2 font-amharic text-3xl md:text-4xl font-semibold text-text-primary leading-tight">
-        <span className="text-gold-500/70 mr-3 text-2xl md:text-3xl align-middle">
+        ምዕራፍ{" "}
+        <span className="text-gold-500/70 ml-1 text-2xl md:text-3xl align-middle">
           {chapterEthiopic ?? chapter}
         </span>
-        ምዕራፍ
       </h1>
       <p className="mt-3 text-xs text-text-faint">{translationName}</p>
     </header>

@@ -1,15 +1,26 @@
 import { MessageCircle } from "lucide-react";
 import type { ReadingVerse } from "@/api/queries/liturgy";
 import { cn } from "@/lib/utils";
+import { useReaderStore } from "@/stores/readerStore";
+import { FONT_SIZE_CLASS } from "@/lib/fontSize";
 
 type Props = {
   verse: ReadingVerse;
   isSelected: boolean;
   onSelect: (verse: ReadingVerse) => void;
+  highlightColor?: string | null;
 };
 
-export function ReadingVerseItem({ verse, isSelected, onSelect }: Props) {
+export function ReadingVerseItem({
+  verse,
+  isSelected,
+  onSelect,
+  highlightColor,
+}: Props) {
+  const fontSize = useReaderStore((s) => s.fontSize);
   const commentaryCount = verse.commentary_count ?? 0;
+  const sizeClass = FONT_SIZE_CLASS[fontSize];
+  const isHighlighted = Boolean(highlightColor);
 
   return (
     <button
@@ -25,7 +36,6 @@ export function ReadingVerseItem({ verse, isSelected, onSelect }: Props) {
       )}
     >
       <div className="flex gap-3">
-        {/* Verse number column */}
         <span
           className={cn(
             "mt-[6px] min-w-[1.5rem] text-right text-xs tabular-nums font-medium select-none transition-colors",
@@ -37,13 +47,19 @@ export function ReadingVerseItem({ verse, isSelected, onSelect }: Props) {
           {verse.verse_number_ethiopic ?? verse.verse_number}
         </span>
 
-        {/* Text + badge */}
-        <div className="flex-1">
-          <p className="font-amharic text-[15px] leading-[1.9] text-text-secondary">
+        <div className="flex-1 min-w-0">
+          <p
+            className={cn(sizeClass)}
+            style={{
+              fontFamily: `'Menbere', 'Nyala', 'Noto Serif Ethiopic', serif`,
+              color: isHighlighted
+                ? highlightTextColor(highlightTextColor)
+                : "rgb(214 211 209)", // text-text-secondary
+            }}
+          >
             {verse.text_am}
           </p>
 
-          {/* Commentary badge — matches the reader */}
           {commentaryCount > 0 && (
             <span
               className={cn(

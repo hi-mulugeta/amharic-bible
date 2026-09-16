@@ -47,10 +47,23 @@ export default {
         ],
       },
       fontSize: {
-        // Amharic needs more generous sizing
-        verse: ["1.25rem", { lineHeight: "2.1", letterSpacing: "0.005em" }],
-        "verse-sm": ["1.125rem", { lineHeight: "2", letterSpacing: "0.005em" }],
-        "verse-lg": ["1.5rem", { lineHeight: "2.2", letterSpacing: "0.005em" }],
+        "verse-sm": ["1.125rem", { lineHeight: "2", letterSpacing: "0.005em" }], // 18px
+        "verse-md": [
+          "1.25rem",
+          { lineHeight: "2.05", letterSpacing: "0.005em" },
+        ], // 20px
+        "verse-lg": [
+          "1.375rem",
+          { lineHeight: "2.1", letterSpacing: "0.005em" },
+        ], // 22px ← default
+        "verse-xl": ["1.5rem", { lineHeight: "2.1", letterSpacing: "0.005em" }], // 24px
+        "verse-2xl": [
+          "1.75rem",
+          { lineHeight: "2.15", letterSpacing: "0.005em" },
+        ], // 28px
+
+        // Legacy aliases kept for compatibility with existing class usage
+        verse: ["1.375rem", { lineHeight: "2.1", letterSpacing: "0.005em" }],
       },
       maxWidth: {
         reading: "42rem", // ~680px — optimal for Amharic

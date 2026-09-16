@@ -1,17 +1,26 @@
 import { forwardRef } from "react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, FileText } from "lucide-react";
 import type { VerseOut } from "@/api/queries/bible";
 import { cn } from "@/lib/utils";
+import { useReaderStore } from "@/stores/readerStore";
+import { FONT_SIZE_CLASS } from "@/lib/fontSize";
+import { highlightTextColor } from "@/lib/highlightColors";
 
 type Props = {
   verse: VerseOut;
   isSelected: boolean;
   onSelect: (verse: VerseOut) => void;
+  highlightColor?: string | null;
+  hasNote?: boolean;
 };
 
 export const VerseItem = forwardRef<HTMLButtonElement, Props>(
-  ({ verse, isSelected, onSelect }, ref) => {
+  ({ verse, isSelected, onSelect, highlightColor, hasNote }, ref) => {
+    const fontSize = useReaderStore((s) => s.fontSize);
     const commentaryCount = verse.commentary_count ?? 0;
+    const sizeClass = FONT_SIZE_CLASS[fontSize];
+    const textColor = highlightTextColor(highlightColor);
+    const isHighlighted = Boolean(highlightColor);
 
     return (
       <button
@@ -27,7 +36,7 @@ export const VerseItem = forwardRef<HTMLButtonElement, Props>(
           isSelected ? "bg-gold-500/[0.07]" : "hover:bg-stone-900/60",
         )}
       >
-        {/* Selection indicator — subtle amber bar */}
+        {/* Selection indicator */}
         <span
           aria-hidden
           className={cn(
@@ -37,7 +46,7 @@ export const VerseItem = forwardRef<HTMLButtonElement, Props>(
         />
 
         <div className="flex gap-3">
-          {/* Verse number column */}
+          {/* Verse number */}
           <span
             className={cn(
               "mt-[7px] min-w-[1.75rem] text-right text-xs tabular-nums font-medium select-none transition-colors",
@@ -49,26 +58,54 @@ export const VerseItem = forwardRef<HTMLButtonElement, Props>(
             {verse.verse_number_ethiopic ?? verse.verse_number}
           </span>
 
-          {/* Text */}
-          <div className="flex-1">
-            <p className="font-amharic text-verse text-text-primary text-balance">
+          {/* Text + badges */}
+          <div className="flex-1 min-w-0">
+            <p
+              className={cn(
+                "text-balance rounded-sm transition-colors duration-200",
+                sizeClass,
+              )}
+              style={{
+                fontFamily: `'Menbere', 'Nyala', 'Noto Serif Ethiopic', serif`,
+                color: isHighlighted ? textColor : "rgb(250 250 249)", // text-text-primary
+              }}
+            >
               {verse.text_am}
             </p>
 
-            {/* Commentary badge */}
-            {commentaryCount > 0 && (
-              <span
-                className={cn(
-                  "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5",
-                  "text-[11px] font-medium tabular-nums transition-colors",
-                  isSelected
-                    ? "bg-gold-500/20 text-gold-300"
-                    : "bg-surface-raised text-text-muted group-hover:text-text-secondary",
+            {/* Badges */}
+            {(commentaryCount > 0 || hasNote) && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {commentaryCount > 0 && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5",
+                      "text-[11px] font-medium tabular-nums transition-colors",
+                      isSelected
+                        ? "bg-gold-500/20 text-gold-300"
+                        : "bg-surface-raised text-text-muted group-hover:text-text-secondary",
+                    )}
+                  >
+                    <MessageCircle className="h-3 w-3" strokeWidth={2.25} />
+                    {commentaryCount}
+                  </span>
                 )}
-              >
-                <MessageCircle className="h-3 w-3" strokeWidth={2.25} />
-                {commentaryCount}
-              </span>
+
+                {hasNote && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5",
+                      "text-[11px] font-medium transition-colors",
+                      isSelected
+                        ? "bg-teal-500/20 text-teal-300"
+                        : "bg-teal-500/10 text-teal-400",
+                    )}
+                    title="ማስታወሻ አለ"
+                  >
+                    <FileText className="h-3 w-3" strokeWidth={2.25} />
+                  </span>
+                )}
+              </div>
             )}
           </div>
         </div>

@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, User as UserIcon, Bookmark, Settings } from "lucide-react";
+import {
+  LogOut,
+  User as UserIcon,
+  Bookmark,
+  Settings,
+  Sliders,
+} from "lucide-react";
 import { useAuth } from "@/auth/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -71,6 +77,8 @@ export function UserMenu() {
           </div>
 
           {/* Items */}
+          {/* Items */}
+          {/* Items */}
           <div className="py-1">
             <MenuItem
               to="/library"
@@ -94,6 +102,13 @@ export function UserMenu() {
               onClick={() => setOpen(false)}
             >
               መገለጫ
+            </MenuItem>
+            <MenuItem
+              to="/settings"
+              icon={<Sliders className="h-3.5 w-3.5" />}
+              onClick={() => setOpen(false)}
+            >
+              ቅንብሮች
             </MenuItem>
           </div>
 
