@@ -26,6 +26,12 @@ export type BookmarkOut = {
   verse_id: number;
   note_am: string | null;
   created_at: string;
+  // Enriched verse reference (from the backend)
+  book_slug: string | null;
+  book_name_am: string | null;
+  chapter: number | null;
+  verse_number: number | null;
+  text_am: string | null;
 };
 
 export type NoteOut = {
@@ -35,6 +41,12 @@ export type NoteOut = {
   color: string;
   created_at: string;
   updated_at: string;
+  // Enriched verse reference
+  book_slug: string | null;
+  book_name_am: string | null;
+  chapter: number | null;
+  verse_number: number | null;
+  text_am: string | null;
 };
 
 export type HighlightOut = {
@@ -285,21 +297,29 @@ export function useUpdateNote() {
   });
 }
 
-export function useDeleteNote() {
+export function useDeleteBookmark() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { id: number; verseId: number }) =>
-      request<void>(`/api/users/me/notes/${args.id}`, { method: "DELETE" }),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({
-        queryKey: userKeys.notesForVerse(variables.verseId),
-      });
-      qc.invalidateQueries({ queryKey: [...userKeys.all, "notes"] });
+    mutationFn: (id: number) =>
+      request<void>(`/api/users/me/bookmarks/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...userKeys.all, "bookmarks"] });
       qc.invalidateQueries({ queryKey: userKeys.stats() });
     },
   });
 }
 
+export function useDeleteNote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { id: number; verseId: number }) =>
+      request<void>(`/api/users/me/notes/${args.id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...userKeys.all, "notes"] });
+      qc.invalidateQueries({ queryKey: userKeys.stats() });
+    },
+  });
+}
 // ------------------------------------------------------------
 // Highlights
 // ------------------------------------------------------------

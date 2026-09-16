@@ -12,6 +12,7 @@ import { LoginPage } from "@/features/auth/LoginPage";
 import { RegisterPage } from "@/features/auth/RegisterPage";
 import { AdminLayout } from "@/features/admin/AdminLayout";
 import { SettingsPage } from "@/features/settings/SettingsPage";
+import { LibraryPage } from "@/features/library/LibraryPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/admin" element={<AdminLayout />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/library" element={<LibraryPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AppShell>
