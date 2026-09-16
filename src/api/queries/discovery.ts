@@ -179,3 +179,121 @@ export function useVerseTags(
     staleTime: 60 * 60 * 1000,
   });
 }
+// ============================================================
+// Verse-centric discovery — topics, cross-refs, parallels
+// ============================================================
+
+export type CrossReferenceOut = {
+  id: number;
+  target_verse_id: number;
+  book_slug: string | null;
+  book_name_am: string | null;
+  chapter: number | null;
+  verse_number: number | null;
+  text_am: string | null;
+  relation: string;
+  weight: number;
+  note_am: string | null;
+};
+
+/**
+ * Topics this verse belongs to.
+ * Uses the new /api/bible/{book}/{chapter}/{verse}/topics endpoint.
+ */
+export function useVerseTopics(
+  bookSlug: string | null | undefined,
+  chapter: number | null | undefined,
+  verseNumber: number | null | undefined,
+  opts?: { translation?: string },
+) {
+  const enabled =
+    Boolean(bookSlug) &&
+    typeof chapter === "number" &&
+    typeof verseNumber === "number";
+
+  return useQuery({
+    enabled,
+    queryKey: [
+      ...discoveryKeys.all,
+      "verse-topics",
+      bookSlug ?? "",
+      chapter ?? 0,
+      verseNumber ?? 0,
+      opts?.translation ?? "AMH1954",
+    ],
+    queryFn: () =>
+      request<TopicOut[]>(
+        `/api/bible/${bookSlug}/${chapter}/${verseNumber}/topics`,
+        { query: { translation: opts?.translation ?? "AMH1954" } },
+      ),
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+/**
+ * Cross-references FROM this verse TO other verses.
+ */
+export function useRelatedVerses(
+  bookSlug: string | null | undefined,
+  chapter: number | null | undefined,
+  verseNumber: number | null | undefined,
+  opts?: { translation?: string; enabled?: boolean },
+) {
+  const enabled =
+    (opts?.enabled ?? true) &&
+    Boolean(bookSlug) &&
+    typeof chapter === "number" &&
+    typeof verseNumber === "number";
+
+  return useQuery({
+    enabled,
+    queryKey: [
+      ...discoveryKeys.all,
+      "verse-related",
+      bookSlug ?? "",
+      chapter ?? 0,
+      verseNumber ?? 0,
+      opts?.translation ?? "AMH1954",
+    ],
+    queryFn: () =>
+      request<CrossReferenceOut[]>(
+        `/api/bible/${bookSlug}/${chapter}/${verseNumber}/related`,
+        { query: { translation: opts?.translation ?? "AMH1954" } },
+      ),
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+/**
+ * Synoptic parallel passages (convenience wrapper around relation=parallel).
+ */
+export function useParallelVerses(
+  bookSlug: string | null | undefined,
+  chapter: number | null | undefined,
+  verseNumber: number | null | undefined,
+  opts?: { translation?: string; enabled?: boolean },
+) {
+  const enabled =
+    (opts?.enabled ?? true) &&
+    Boolean(bookSlug) &&
+    typeof chapter === "number" &&
+    typeof verseNumber === "number";
+
+  return useQuery({
+    enabled,
+    queryKey: [
+      ...discoveryKeys.all,
+      "verse-parallel",
+      bookSlug ?? "",
+      chapter ?? 0,
+      verseNumber ?? 0,
+      opts?.translation ?? "AMH1954",
+    ],
+    queryFn: () =>
+      request<CrossReferenceOut[]>(
+        `/api/bible/${bookSlug}/${chapter}/${verseNumber}/parallel`,
+        { query: { translation: opts?.translation ?? "AMH1954" } },
+      ),
+    staleTime: 60 * 60 * 1000,
+  });
+}

@@ -9,12 +9,13 @@ import { ChapterHeader } from "@/components/bible/ChapterHeader";
 import { VerseList } from "@/components/bible/VerseList";
 import { ChapterNavigation } from "@/components/bible/ChapterNavigation";
 import { CommentaryPanel } from "@/components/commentary/CommentaryPanel";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useReaderStore } from "@/stores/readerStore";
 import { useAuth } from "@/auth/AuthContext";
 import { cn } from "@/lib/utils";
 import { request } from "@/api/client";
+import { ChapterHeaderSkeleton } from "@/components/bible/ChapterHeaderSkeleton";
+import { VerseListSkeleton } from "@/components/bible/VerseListSkeleton";
 
 export function BibleReaderPage() {
   const { book: bookSlug = "matthew", chapter: chapterStr = "1" } = useParams();
@@ -262,32 +263,6 @@ export function BibleReaderPage() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function ChapterHeaderSkeleton() {
-  return (
-    <div className="border-b border-surface-border pb-5 mb-8">
-      <Skeleton className="h-4 w-24" />
-      <Skeleton className="mt-3 h-9 w-48" />
-      <Skeleton className="mt-3 h-3 w-32" />
-    </div>
-  );
-}
-
-function VerseListSkeleton() {
-  return (
-    <div className="space-y-3">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="flex gap-3">
-          <Skeleton className="mt-1.5 h-3 w-6 shrink-0" />
-          <Skeleton
-            className="h-5"
-            style={{ width: `${60 + ((i * 7) % 40)}%` }}
-          />
-        </div>
-      ))}
     </div>
   );
 }

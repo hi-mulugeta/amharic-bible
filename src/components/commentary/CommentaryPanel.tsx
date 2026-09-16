@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { VerseConnections } from "./VerseConnections";
 import {
   X,
   MessageCircle,
@@ -334,7 +335,21 @@ export function CommentaryPanel({ verse, onClose }: Props) {
             ) : null}
           </>
         )}
+        {verse && (
+          <VerseConnections
+            bookSlug={verse.book}
+            chapter={verse.chapter}
+            verseNumber={verse.verse_number}
+          />
+        )}
 
+        {verse && (
+          <VerseTagsFooter
+            bookSlug={verse.book}
+            chapter={verse.chapter}
+            verseNumber={verse.verse_number}
+          />
+        )}
         {verse && (
           <VerseTagsFooter
             bookSlug={verse.book}
