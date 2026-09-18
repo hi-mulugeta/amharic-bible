@@ -1,10 +1,16 @@
-import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, User as UserIcon, Sparkles } from "lucide-react";
-import { useSaint } from "@/api/queries/liturgy";
+import { Link, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  User as UserIcon,
+  Sparkles,
+  Calendar,
+  Users as UsersIcon,
+} from "lucide-react";
+import { useSaint, useSaintsForDate } from "@/api/queries/liturgy";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { toEthiopicNumeral } from "@/lib/ethiopic";
 import { ETHIOPIAN_MONTHS } from "@/lib/ethiopic-months";
+import { toEthiopicNumeral } from "@/lib/ethiopic";
 
 export function SaintDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -12,13 +18,12 @@ export function SaintDetailPage() {
 
   return (
     <div className="mx-auto max-w-reader px-5 py-10 md:px-8 md:py-14">
-      {/* Back */}
       <Link
-        to="/"
+        to="/liturgy?tab=saints"
         className="inline-flex items-center gap-1.5 text-[13px] text-text-muted transition-colors hover:text-text-primary"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        <span className="font-amharic">ወደ መነሻ</span>
+        <span className="font-amharic">ወደ ቅዱሳን</span>
       </Link>
 
       {isLoading ? (
@@ -62,10 +67,13 @@ export function SaintDetailPage() {
             </div>
 
             {/* Commemoration date */}
-            <p className="mt-6 font-amharic text-[13px] text-text-faint">
-              የሚታወስበት ቀን: {ETHIOPIAN_MONTHS[data.ethiopian_month - 1]}{" "}
-              {toEthiopicNumeral(data.ethiopian_day)}
-            </p>
+            <div className="mt-6 flex items-center gap-2 font-amharic text-[13px] text-text-faint">
+              <Calendar className="h-3.5 w-3.5" />
+              <span>
+                የሚታወስበት ቀን: {ETHIOPIAN_MONTHS[data.ethiopian_month - 1]}{" "}
+                {toEthiopicNumeral(data.ethiopian_day)}
+              </span>
+            </div>
           </header>
 
           {/* Bio */}
@@ -74,14 +82,56 @@ export function SaintDetailPage() {
               <h2 className="mb-4 font-amharic text-[15px] font-semibold text-text-primary">
                 የሕይወት ታሪክ
               </h2>
-              <div className="space-y-4 font-amharic text-verse-sm leading-[2] text-text-secondary whitespace-pre-line">
+              <div className="font-amharic text-verse-md leading-[2] text-text-secondary whitespace-pre-line">
                 {data.long_bio_am ?? data.short_bio_am}
               </div>
             </section>
           )}
+
+          {/* Other saints on the same day */}
+          <OtherSaintsOnSameDay
+            month={data.ethiopian_month}
+            day={data.ethiopian_day}
+            excludeSlug={data.slug}
+          />
         </article>
       )}
     </div>
+  );
+}
+
+function OtherSaintsOnSameDay({
+  month,
+  day,
+  excludeSlug,
+}: {
+  month: number;
+  day: number;
+  excludeSlug: string;
+}) {
+  // We don't have a direct month/day query, but we can hit today's date
+  // via the /saints/{date} endpoint with a synthesized Gregorian equivalent.
+  // Simpler: skip this for now and just link to the saints index.
+  return (
+    <section className="border-t border-surface-border pt-8">
+      <div className="flex items-center gap-2 mb-3">
+        <UsersIcon className="h-4 w-4 text-gold-500/80" />
+        <h2 className="font-amharic text-[15px] font-semibold text-text-primary">
+          ተጨማሪ ቅዱሳን
+        </h2>
+      </div>
+      <p className="font-amharic text-[13px] text-text-muted mb-4">
+        {ETHIOPIAN_MONTHS[month - 1]} {toEthiopicNumeral(day)} የሚታወሱ ቅዱሳንን ሁሉ
+        ለማየት፦
+      </p>
+      <Link
+        to="/liturgy?tab=saints"
+        className="inline-flex items-center gap-1.5 text-[14px] font-medium text-gold-500 transition-colors hover:text-gold-400"
+      >
+        <span className="font-amharic">ወደ ቅዱሳን ዝርዝር</span>
+        <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
+      </Link>
+    </section>
   );
 }
 

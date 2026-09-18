@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { BookOut, NavigationOut } from "@/api/queries/bible";
+import type { NavigationOut } from "@/api/queries/bible";
 import { useBooks } from "@/api/queries/bible";
 
 type Props = {

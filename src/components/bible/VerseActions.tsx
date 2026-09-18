@@ -155,7 +155,7 @@ export function VerseActions({
           />
           <div
             className={cn(
-              "absolute z-50 mt-2 flex items-center gap-1 rounded-xl border border-surface-border bg-stone-950 p-1.5 shadow-xl animate-fade-in",
+              "absolute z-50 mt-2 flex items-center gap-1 rounded-xl border border-surface-border bg-surface p-1.5 shadow-xl animate-fade-in",
               inline ? "left-0 top-full" : "right-0 top-full",
             )}
           >
@@ -233,7 +233,7 @@ function ActionButton({
           role="tooltip"
           className={cn(
             "pointer-events-none absolute left-1/2 top-full z-40 mt-1.5 -translate-x-1/2",
-            "whitespace-nowrap rounded-md border border-surface-border bg-stone-900 px-2 py-1",
+            "whitespace-nowrap rounded-md border border-surface-border bg-surface-raised px-2 py-1",
             "font-amharic text-[11px] text-text-secondary shadow-lg",
             "animate-fade-in",
           )}

@@ -16,6 +16,14 @@ export type TopicCreate = {
   description_am?: string | null;
   description_en?: string | null;
 };
+export type PageMeta = {
+  page: number;
+  per_page: number;
+  total: number;
+  pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+};
 
 export type TopicUpdate = {
   name_am?: string;
@@ -579,6 +587,328 @@ export function useDeleteCommentary() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "commentaries"] });
       qc.invalidateQueries({ queryKey: ["commentaries", "verse"] });
+    },
+  });
+}
+// ============================================================
+// Admin Liturgy list hooks
+// ============================================================
+
+export type AdminFeastDay = {
+  id: number;
+  gregorian_date: string | null;
+  ethiopian_month: number;
+  ethiopian_day: number;
+  ethiopian_month_name: string;
+  kind: string;
+  name_am: string;
+  name_en: string | null;
+  description_am: string | null;
+  breaks_fast: boolean;
+};
+
+export type AdminPrayer = {
+  id: number;
+  slug: string;
+  title_am: string;
+  title_en: string | null;
+  category: string | null;
+  source_am: string | null;
+  word_count: number;
+};
+
+export type AdminVotd = {
+  id: number;
+  gregorian_date: string;
+  ethiopian_month: number;
+  ethiopian_day: number;
+  verse_id: number | null;
+  book_slug: string | null;
+  book_name_am: string | null;
+  chapter: number | null;
+  verse_number: number | null;
+  text_am: string | null;
+  reflection_am: string | null;
+};
+
+export type AdminCrossReference = {
+  id: number;
+  source_verse_id: number;
+  target_verse_id: number;
+  source_ref: {
+    book_slug: string | null;
+    book_name_am: string | null;
+    chapter: number;
+    verse_number: number;
+    text_am: string;
+  } | null;
+  target_ref: {
+    book_slug: string | null;
+    book_name_am: string | null;
+    chapter: number;
+    verse_number: number;
+    text_am: string;
+  } | null;
+  relation: string;
+  weight: number;
+  note_am: string | null;
+};
+
+export type AdminReading = {
+  id: number;
+  gregorian_date: string;
+  ethiopian_year: number;
+  ethiopian_month: number;
+  ethiopian_day: number;
+  ethiopian_month_name: string;
+  title_am: string | null;
+  description_am: string | null;
+  reading_count: number;
+};
+
+function useAdminList<T>(
+  key: string,
+  path: string,
+  opts?: {
+    page?: number;
+    perPage?: number;
+    extraQuery?: Record<string, string | number | undefined>;
+  },
+) {
+  const page = opts?.page ?? 1;
+  return useQuery({
+    queryKey: ["admin", key, page, JSON.stringify(opts?.extraQuery ?? {})],
+    queryFn: () =>
+      request<{ data: T[]; meta: PageMeta }>(path, {
+        query: {
+          page,
+          per_page: opts?.perPage ?? 100,
+          ...(opts?.extraQuery ?? {}),
+        },
+      }),
+    placeholderData: (prev) => prev,
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useAdminFeastDays(opts?: { page?: number; perPage?: number }) {
+  return useAdminList<AdminFeastDay>(
+    "liturgy-feast-days",
+    "/api/admin/liturgy/feast-days",
+    opts,
+  );
+}
+
+export function useAdminPrayers(opts?: { page?: number; perPage?: number }) {
+  return useAdminList<AdminPrayer>(
+    "liturgy-prayers",
+    "/api/admin/liturgy/prayers",
+    opts,
+  );
+}
+
+export function useAdminVotd(opts?: { page?: number; perPage?: number }) {
+  return useAdminList<AdminVotd>(
+    "liturgy-votd",
+    "/api/admin/liturgy/verse-of-day",
+    opts,
+  );
+}
+
+export function useAdminReadings(opts?: { page?: number; perPage?: number }) {
+  return useAdminList<AdminReading>(
+    "liturgy-readings",
+    "/api/admin/liturgy/readings",
+    opts,
+  );
+}
+
+export function useAdminCrossReferences(opts?: {
+  page?: number;
+  perPage?: number;
+  relation?: string;
+}) {
+  return useAdminList<AdminCrossReference>(
+    "discovery-cross-refs",
+    "/api/admin/discovery/cross-references",
+    {
+      page: opts?.page,
+      perPage: opts?.perPage,
+      extraQuery: opts?.relation ? { relation: opts.relation } : undefined,
+    },
+  );
+}
+
+// ============================================================
+// Bible Books admin
+// ============================================================
+import type { BookOut } from "./bible";
+
+export type BookCreate = {
+  slug: string;
+  name_am: string;
+  name_am_full?: string | null;
+  name_en: string;
+  abbreviation_am?: string | null;
+  testament: "OT" | "NT";
+  position: number;
+  total_chapters: number;
+  is_deuterocanonical?: boolean;
+  ethiopian_only?: boolean;
+};
+
+export type BookUpdate = Partial<Omit<BookCreate, "slug">>;
+
+export function useCreateBook() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: BookCreate) =>
+      request<BookOut>("/api/admin/books", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bible", "books"] });
+    },
+  });
+}
+
+export function useUpdateBook(bookId: number | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: BookUpdate) =>
+      request<BookOut>(`/api/admin/books/${bookId}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bible", "books"] });
+    },
+  });
+}
+
+export function useDeleteBook() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      bookId,
+      force = false,
+    }: {
+      bookId: number;
+      force?: boolean;
+    }) =>
+      request<DeleteResult>(`/api/admin/books/${bookId}`, {
+        method: "DELETE",
+        query: force ? { force: true } : undefined,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bible", "books"] });
+    },
+  });
+}
+// ============================================================
+// Bible Verses admin
+// ============================================================
+export type VerseCreate = {
+  translation_code: string;
+  book_slug: string;
+  chapter: number;
+  verse_number: number;
+  text_am: string;
+};
+
+export type VerseBulkCreate = {
+  translation_code: string;
+  book_slug: string;
+  chapter: number;
+  verses: Array<{ verse: number; text: string }>;
+};
+
+export type VerseUpdate = {
+  text_am?: string;
+};
+
+export type VerseAdminOut = {
+  id: number;
+  book: string | null;
+  book_name_am: string | null;
+  chapter: number;
+  verse_number: number;
+  text_am: string;
+  verse_number_ethiopic: string | null;
+  commentary_count: number | null;
+};
+
+export function useCreateVerse() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: VerseCreate) =>
+      request<VerseAdminOut>("/api/admin/verses", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (_data, variables) => {
+      // Invalidate the chapter query so the reader sees the new verse
+      qc.invalidateQueries({
+        queryKey: ["bible", "chapter", variables.book_slug, variables.chapter],
+      });
+      qc.invalidateQueries({ queryKey: ["bible", "books"] });
+    },
+  });
+}
+
+export function useBulkCreateVerses() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: VerseBulkCreate) =>
+      request<{
+        created: number;
+        skipped: number;
+        book: string;
+        chapter: number;
+        translation: string;
+      }>("/api/admin/verses/bulk", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({
+        queryKey: ["bible", "chapter", variables.book_slug, variables.chapter],
+      });
+    },
+  });
+}
+
+export function useUpdateVerse() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      verseId,
+      payload,
+    }: {
+      verseId: number;
+      payload: VerseUpdate;
+    }) =>
+      request<VerseAdminOut>(`/api/admin/verses/${verseId}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      // Invalidate all chapter queries — cheap and guarantees freshness
+      qc.invalidateQueries({ queryKey: ["bible", "chapter"] });
+    },
+  });
+}
+
+export function useDeleteVerse() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (verseId: number) =>
+      request<DeleteResult>(`/api/admin/verses/${verseId}`, {
+        method: "DELETE",
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bible", "chapter"] });
     },
   });
 }

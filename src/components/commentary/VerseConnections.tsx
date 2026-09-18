@@ -23,16 +23,14 @@ export function VerseConnections({ bookSlug, chapter, verseNumber }: Props) {
   const hasParallel = (parallel.data?.length ?? 0) > 0;
   const hasRelated = (related.data?.length ?? 0) > 0;
   const hasTopics = (topics.data?.length ?? 0) > 0;
-
   const loading = parallel.isLoading || related.isLoading || topics.isLoading;
   const nothingToShow = !hasParallel && !hasRelated && !hasTopics;
 
-  // Hide silently when there's nothing and we're not loading.
   if (!loading && nothingToShow) return null;
   if (!bookSlug || chapter === null || verseNumber === null) return null;
 
   return (
-    <footer className="border-t border-surface-border px-5 py-5 space-y-5">
+    <footer className="space-y-5 border-t border-surface-border px-5 py-5">
       {parallel.isLoading ? (
         <ConnectionSkeleton />
       ) : hasParallel ? (
@@ -70,9 +68,9 @@ export function VerseConnections({ bookSlug, chapter, verseNumber }: Props) {
                   to={`/topics/${topic.slug}`}
                   className={cn(
                     "inline-flex items-center gap-1 rounded-full px-2.5 py-1",
-                    "bg-gold-500/[0.06] text-gold-300/90",
+                    "bg-gold-500/10 text-gold-500",
                     "font-amharic text-[12px]",
-                    "transition-colors hover:bg-gold-500/[0.12] hover:text-gold-200",
+                    "transition-colors hover:bg-gold-500/20",
                   )}
                 >
                   {topic.name_am}
@@ -116,7 +114,6 @@ function ConnectionGroup({
 }
 
 function ReferenceRow({ item }: { item: CrossReferenceOut }) {
-  // If the target has no book/chapter/verse, we can't link to it.
   if (!item.book_slug || item.chapter === null || item.verse_number === null) {
     return null;
   }
@@ -136,16 +133,16 @@ function ReferenceRow({ item }: { item: CrossReferenceOut }) {
       <Link
         to={`/bible/${item.book_slug}/${item.chapter}?verse=${item.verse_number}`}
         className={cn(
-          "group/ref flex items-start gap-2 rounded-md px-2 py-1.5 -mx-2",
+          "group/ref -mx-2 flex items-start gap-2 rounded-md px-2 py-1.5",
           "transition-colors hover:bg-surface-raised/50",
         )}
       >
         <div className="min-w-0 flex-1">
-          <p className="font-amharic text-[12px] font-medium text-gold-500/80">
+          <p className="font-amharic text-[12px] font-medium text-gold-500">
             {ref}
           </p>
           {preview && (
-            <p className="mt-0.5 font-amharic text-[13px] leading-[1.7] text-text-muted line-clamp-2">
+            <p className="mt-0.5 line-clamp-2 font-amharic text-[13px] leading-[1.7] text-text-muted">
               {preview}
             </p>
           )}
@@ -164,9 +161,9 @@ function ReferenceRow({ item }: { item: CrossReferenceOut }) {
 function ConnectionSkeleton() {
   return (
     <div className="space-y-2">
-      <div className="h-3 w-24 rounded bg-surface-raised/60 animate-pulse" />
-      <div className="h-8 w-full rounded bg-surface-raised/40 animate-pulse" />
-      <div className="h-8 w-5/6 rounded bg-surface-raised/40 animate-pulse" />
+      <div className="h-3 w-24 animate-pulse rounded bg-surface-raised/60" />
+      <div className="h-8 w-full animate-pulse rounded bg-surface-raised/40" />
+      <div className="h-8 w-5/6 animate-pulse rounded bg-surface-raised/40" />
     </div>
   );
 }

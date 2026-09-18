@@ -47,7 +47,8 @@ export function BookSidebar({
         : grouped.isLoading;
 
   return (
-    <div className="flex h-full flex-col bg-stone-950">
+    // Line 1 — top of the component:
+    <div className="flex h-full flex-col bg-surface">
       {/* Tabs */}
       <div className="border-b border-surface-border p-3">
         <div
@@ -160,7 +161,7 @@ export function BookSidebar({
 
 function SectionHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="sticky top-0 z-10 flex items-center justify-between bg-stone-950/95 px-4 py-2 backdrop-blur">
+    <div className="sticky top-0 z-10 flex items-center justify-between bg-surface/95 px-4 py-2 backdrop-blur">
       <span className="font-amharic text-[11px] font-medium uppercase tracking-wider text-text-faint">
         {label}
       </span>
@@ -230,7 +231,7 @@ function BookRow({
       </button>
 
       {isExpanded && (
-        <div className="animate-fade-in bg-stone-950/60 px-3 pb-3 pt-1">
+        <div className="animate-fade-in bg-surface-sunken/60 px-3 pb-3 pt-1">
           <ChapterGrid
             book={book}
             currentChapter={isCurrentBook ? currentChapter : undefined}

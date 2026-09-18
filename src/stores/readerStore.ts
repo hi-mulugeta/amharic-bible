@@ -3,6 +3,8 @@ import { persist } from "zustand/middleware";
 
 export type TestamentFilter = "OT" | "NT" | "ALL";
 export type ReadingFontSize = "sm" | "md" | "lg" | "xl" | "2xl";
+export type ReadingFontFamily = "noto-sans" | "menbere";
+export type ReadingTheme = "parchment" | "stone" | "midnight";
 
 type ReaderState = {
   selectedVerseId: number | null;
@@ -20,9 +22,14 @@ type ReaderState = {
   expandedBookSlug: string | null;
   setExpandedBook: (slug: string | null) => void;
 
-  // Reading font size preference
   fontSize: ReadingFontSize;
   setFontSize: (size: ReadingFontSize) => void;
+
+  fontFamily: ReadingFontFamily;
+  setFontFamily: (family: ReadingFontFamily) => void;
+
+  theme: ReadingTheme;
+  setTheme: (theme: ReadingTheme) => void;
 };
 
 export const useReaderStore = create<ReaderState>()(
@@ -45,6 +52,12 @@ export const useReaderStore = create<ReaderState>()(
 
       fontSize: "lg",
       setFontSize: (size) => set({ fontSize: size }),
+
+      fontFamily: "noto-sans",
+      setFontFamily: (family) => set({ fontFamily: family }),
+
+      theme: "parchment",
+      setTheme: (theme) => set({ theme }),
     }),
     {
       name: "catena-reader",
@@ -52,6 +65,8 @@ export const useReaderStore = create<ReaderState>()(
         translationCode: s.translationCode,
         sidebarTestament: s.sidebarTestament,
         fontSize: s.fontSize,
+        fontFamily: s.fontFamily,
+        theme: s.theme,
       }),
     },
   ),

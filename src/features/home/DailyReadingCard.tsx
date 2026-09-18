@@ -12,10 +12,6 @@ import { cn } from "@/lib/utils";
 import { ReadingVerseItem } from "./ReadingVerseItem";
 import { CommentaryPanel } from "@/components/commentary/CommentaryPanel";
 
-/**
- * A verse plus its parent reference. We need the book slug and chapter
- * to fetch the verse's tags and open the commentary panel correctly.
- */
 type SelectedReadingVerse = {
   verse: ReadingVerse;
   bookSlug: string;
@@ -30,8 +26,8 @@ export function DailyReadingCard() {
   if (isLoading) {
     return (
       <section className="rounded-xl border border-surface-border bg-surface-raised/20 p-5">
-        <Skeleton className="h-3 w-24 mb-4" />
-        <Skeleton className="h-9 w-full mb-2" />
+        <Skeleton className="mb-4 h-3 w-24" />
+        <Skeleton className="mb-2 h-9 w-full" />
         <Skeleton className="h-9 w-full" />
       </section>
     );
@@ -45,7 +41,7 @@ export function DailyReadingCard() {
       <section>
         <header className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-gold-500/70" />
+            <BookOpen className="h-4 w-4 text-gold-500/80" />
             <h2 className="font-amharic text-[15px] font-semibold text-text-primary">
               {data.title_am ?? "የዕለቱ ምንባብ"}
             </h2>
@@ -61,7 +57,7 @@ export function DailyReadingCard() {
           </p>
         )}
 
-        <div className="overflow-hidden rounded-xl border border-surface-border bg-surface-raised/20 divide-y divide-surface-border">
+        <div className="divide-y divide-surface-border overflow-hidden rounded-xl border border-surface-border bg-surface-raised/20">
           {readings.map((block, i) => (
             <ReadingRow
               key={i}
@@ -90,7 +86,6 @@ function ReadingRow({
   onSelectVerse: (payload: SelectedReadingVerse) => void;
 }) {
   const [open, setOpen] = useState(false);
-
   const label = `${block.book_name_am} ${block.chapter_ethiopic}:${block.start_ethiopic}${
     block.start !== block.end ? `-${block.end_ethiopic}` : ""
   }`;
@@ -103,7 +98,7 @@ function ReadingRow({
         aria-expanded={open}
         className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-raised/40"
       >
-        <span className="rounded-sm bg-gold-500/15 px-1.5 py-0.5 font-amharic text-[10px] font-medium uppercase tracking-wider text-gold-400">
+        <span className="rounded-sm bg-gold-500/15 px-1.5 py-0.5 font-amharic text-[10px] font-medium uppercase tracking-wider text-gold-500">
           {block.kind}
         </span>
         <span className="font-amharic text-[14px] text-text-primary">
@@ -118,7 +113,7 @@ function ReadingRow({
       </button>
 
       {open && (
-        <div className="animate-fade-in bg-stone-950/50 px-4 pb-4 pt-1">
+        <div className="animate-fade-in bg-surface-sunken/50 px-4 pb-4 pt-1">
           <div className="space-y-1">
             {block.verses.map((v) => (
               <ReadingVerseItem
@@ -138,7 +133,7 @@ function ReadingRow({
           </div>
           <Link
             to={`/bible/${block.book_slug}/${block.chapter}`}
-            className="mt-4 inline-flex font-amharic text-[13px] font-medium text-gold-500 hover:text-gold-400 transition-colors"
+            className="mt-4 inline-flex font-amharic text-[13px] font-medium text-gold-500 transition-colors hover:text-gold-400"
           >
             በአንባቢው ውስጥ ክፈት →
           </Link>
@@ -156,9 +151,6 @@ function CommentarySheet({
   onClose: () => void;
 }) {
   const { verse, bookSlug, bookNameAm, chapter } = payload;
-
-  // Pass a fully-formed verse to the panel — including book + chapter —
-  // so the tag footer can fetch and render.
   const verseForPanel = {
     id: verse.id,
     verse_number: verse.verse_number,
@@ -176,10 +168,9 @@ function CommentarySheet({
         type="button"
         aria-label="ዝጋ"
         onClick={onClose}
-        className="absolute inset-0 bg-stone-950/60 backdrop-blur-sm animate-fade-in"
+        className="absolute inset-0 animate-fade-in bg-black/60 backdrop-blur-sm"
       />
-
-      <div className="relative z-10 h-full w-full max-w-md border-l border-surface-border bg-stone-950 shadow-2xl animate-slide-up lg:max-w-[440px]">
+      <div className="relative z-10 h-full w-full max-w-md animate-slide-up border-l border-surface-border bg-surface shadow-2xl lg:max-w-[440px]">
         <CommentaryPanel verse={verseForPanel} onClose={onClose} />
       </div>
     </div>

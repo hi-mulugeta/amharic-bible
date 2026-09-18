@@ -15,10 +15,10 @@ export function HomePage() {
       {/* Greeting + fasting status */}
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-amharic text-2xl md:text-3xl font-semibold text-text-primary">
+          <h1 className="font-amharic text-2xl font-semibold text-text-primary md:text-3xl">
             እንኳን ደህና መጡ
           </h1>
-          <p className="mt-1 font-amharic text-[14px] text-text-muted">
+          <p className="mt-1.5 font-amharic text-[14px] text-text-muted">
             የዕለቱ ቃል፣ ቅዱሳንና ምንባቦች
           </p>
         </div>
@@ -28,38 +28,38 @@ export function HomePage() {
       </header>
 
       {/* Quick search */}
-      <div className="mb-8">
+      <div className="mb-10">
         <QuickSearchBar />
       </div>
 
       {/* Continue reading (silent until auth) */}
-      <div className="mb-8">
+      <div className="mb-10">
         <ContinueReadingCard />
       </div>
 
       {/* Verse of the day */}
-      <div className="mb-10">
+      <div className="mb-12">
         <VerseOfDayCard />
       </div>
 
       {/* Daily reading */}
-      <div className="mb-10">
+      <div className="mb-12">
         <DailyReadingCard />
       </div>
 
-      {/* Upcoming feasts — NEW */}
-      <div className="mb-10">
+      {/* Upcoming feasts */}
+      <div className="mb-12">
         <UpcomingFeastsRow />
       </div>
 
       {/* Saints of the day */}
       <SaintsRow />
 
-      <div className="h-16" />
-
-      <p className="mt-12 text-center text-[11px] text-text-faint">
-        ትርጉም: {translationCode} · ካተና መጽሐፍ ቅዱስ
-      </p>
+      <footer className="mt-16 pb-4 text-center">
+        <p className="font-amharic text-[11px] text-text-faint">
+          ትርጉም: {translationCode} · ካተና መጽሐፍ ቅዱስ
+        </p>
+      </footer>
     </div>
   );
 }

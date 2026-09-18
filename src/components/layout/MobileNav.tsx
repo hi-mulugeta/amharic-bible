@@ -16,14 +16,16 @@ export function MobileNav({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-sm md:hidden animate-fade-in" />
-        <Dialog.Content className="fixed inset-y-0 left-0 z-50 w-72 border-r border-surface-border bg-stone-950 p-6 md:hidden animate-slide-up">
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden animate-fade-in" />
+        <Dialog.Content className="fixed inset-y-0 left-0 z-50 w-72 border-r border-surface-border bg-surface p-6 md:hidden animate-slide-up">
           <Dialog.Title className="sr-only">ዝርዝር</Dialog.Title>
+
           <div className="mb-8">
             <span className="font-amharic text-lg font-semibold text-text-primary">
               ካተና መጽሐፍ ቅዱስ
             </span>
           </div>
+
           <nav className="flex flex-col gap-1">
             {items.map((item) => (
               <Link

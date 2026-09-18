@@ -27,7 +27,7 @@ export function SuggestionList({ suggestions, onPick }: Props) {
       role="listbox"
       className={cn(
         "absolute left-0 right-0 top-full z-30 mt-2",
-        "overflow-hidden rounded-xl border border-surface-border bg-stone-950 shadow-2xl",
+        "overflow-hidden rounded-xl border border-surface-border bg-surface shadow-2xl",
         "animate-fade-in",
       )}
     >
@@ -37,8 +37,6 @@ export function SuggestionList({ suggestions, onPick }: Props) {
           <li key={`${s.type}-${s.id}-${i}`}>
             <button
               type="button"
-              // Mousedown fires before blur, so the suggestion actually
-              // wins over the input's blur handler.
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => onPick(s.slug, s.type)}
               className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-surface-raised"

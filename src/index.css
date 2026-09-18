@@ -2,10 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   THEME TOKENS
+   Every theme is a set of CSS variables applied to <html>.
+   Tailwind color tokens (surface, text, gold) read these.
+   ============================================================ */
+:root,
+html.theme-stone {
+  --color-surface: 12 10 9;
+  --color-surface-raised: 28 25 23;
+  --color-surface-sunken: 10 9 8;
+  --color-border: 41 37 36;
+  --color-text-primary: 250 250 249;
+  --color-text-secondary: 214 211 209;
+  --color-text-muted: 168 162 158;
+  --color-text-faint: 120 113 108;
+  --color-accent: 245 178 53;
+  --color-accent-hover: 248 201 94;
+  color-scheme: dark;
+}
+
+html.theme-parchment {
+  --color-surface: 250 246 237;
+  --color-surface-raised: 243 236 220;
+  --color-surface-sunken: 239 229 208;
+  --color-border: 224 213 190;
+  --color-text-primary: 42 31 20;
+  --color-text-secondary: 74 58 40;
+  --color-text-muted: 122 106 82;
+  --color-text-faint: 168 152 128;
+  --color-accent: 184 134 11;
+  --color-accent-hover: 212 160 23;
+  color-scheme: light;
+}
+
+html.theme-midnight {
+  --color-surface: 8 11 20;
+  --color-surface-raised: 14 19 32;
+  --color-surface-sunken: 5 8 16;
+  --color-border: 26 34 51;
+  --color-text-primary: 232 236 243;
+  --color-text-secondary: 176 184 200;
+  --color-text-muted: 122 132 151;
+  --color-text-faint: 82 92 110;
+  --color-accent: 212 175 110;
+  --color-accent-hover: 229 196 138;
+  color-scheme: dark;
+}
+
 @layer base {
   :root {
-    /* The two font stacks — change here, applies everywhere */
-    --font-amharic: "Menbere", "Nyala", "Noto Serif Ethiopic", serif;
+    --font-amharic:
+      "Menbere", "Nyala", "Noto Sans Ethiopic", "Noto Serif Ethiopic", serif;
     --font-latin: "Inter", system-ui, sans-serif;
   }
 
@@ -15,29 +63,36 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     scroll-behavior: smooth;
+    background-color: rgb(var(--color-surface));
+    color: rgb(var(--color-text-primary));
   }
 
-  /* Amharic rendering — this is the critical rule */
+  body {
+    background-color: rgb(var(--color-surface));
+    color: rgb(var(--color-text-primary));
+  }
+
   .font-amharic {
     font-family: var(--font-amharic);
     font-feature-settings: "kern" 1;
     text-rendering: optimizeLegibility;
   }
 
-  /* Latin-only override — for UI chrome */
   .font-latin {
     font-family: var(--font-latin);
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-gold-500/50 ring-offset-2 ring-offset-stone-950 rounded-sm;
+    @apply outline-none ring-2 ring-gold-500/50 ring-offset-2 rounded-sm;
+    --tw-ring-offset-color: rgb(var(--color-surface));
   }
 
   ::selection {
-    @apply bg-gold-500/30 text-stone-50;
+    @apply bg-gold-500/30;
+    color: rgb(var(--color-text-primary));
   }
 
-  /* Scrollbar — subtle, dark */
+  /* Scrollbar — adapts to theme */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -46,12 +101,13 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-stone-800 rounded-full;
+    background-color: rgb(var(--color-border));
+    border-radius: 9999px;
     border: 3px solid transparent;
     background-clip: padding-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-stone-700;
+    background-color: rgb(var(--color-text-faint));
     background-clip: padding-box;
     border: 3px solid transparent;
   }
@@ -64,19 +120,17 @@
 }
 
 @layer components {
-  /* The canonical reading style — used by verses, commentaries, saints, prayers */
   .prose-am {
     font-family: var(--font-amharic);
     @apply text-verse text-text-primary;
   }
-
   .prose-am-sm {
     font-family: var(--font-amharic);
     @apply text-verse-sm text-text-secondary;
   }
-
   .divider {
-    @apply border-t border-surface-border;
+    border-top-width: 1px;
+    border-color: rgb(var(--color-border));
   }
 }
 
@@ -90,7 +144,6 @@
       transparent 100%
     );
   }
-
   .text-balance {
     text-wrap: balance;
   }

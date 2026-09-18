@@ -27,13 +27,11 @@ export function SearchInput({
   const [focused, setFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const navigate = useNavigate();
-
   const debounced = useDebounced(value, 200);
   const { data: suggest } = useSuggest(debounced, {
     enabled: focused && debounced.trim().length >= 1,
   });
 
-  // Auto-focus when requested
   useEffect(() => {
     if (autoFocus) inputRef.current?.focus();
   }, [autoFocus]);
@@ -95,7 +93,6 @@ export function SearchInput({
           setShowSuggestions(true);
         }}
         onBlur={() => {
-          // Delay so a click on a suggestion registers before we hide
           setTimeout(() => {
             setFocused(false);
             setShowSuggestions(false);

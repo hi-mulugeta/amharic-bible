@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/Button";
 import { FieldError, AuthFormShell } from "./AuthFormShell";
 import { cn } from "@/lib/utils";
 
+export const inputClass = cn(
+  "w-full rounded-lg border border-surface-border bg-surface-sunken/40",
+  "px-3.5 py-2.5",
+  "font-amharic text-[15px] text-text-primary placeholder:text-text-faint",
+  "transition-colors",
+  "focus:border-gold-500/40 focus:bg-surface-sunken/60 focus:outline-none",
+);
+
 export function LoginPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -94,11 +102,3 @@ export function LoginPage() {
     </AuthFormShell>
   );
 }
-
-export const inputClass = cn(
-  "w-full rounded-lg border border-surface-border bg-stone-950/40",
-  "px-3.5 py-2.5",
-  "font-amharic text-[15px] text-text-primary placeholder:text-text-faint",
-  "transition-colors",
-  "focus:border-gold-500/40 focus:bg-stone-950/60 focus:outline-none",
-);

@@ -11,18 +11,18 @@ export type SearchVerse = {
   chapter: number;
   verse_number: number;
   verse_number_ethiopic?: string;
-  text_am: string; // may contain <mark>...</mark>
-  match?: "fts" | "trigram";
+  text_am: string;
+  match?: "fts" | "trigram" | "advanced" | "trigram_fallback";
 };
 
 export type SearchCommentary = {
   id: number;
   verse_id: number;
   excerpt_am: string | null;
-  content_am?: string; // present in unified response
+  content_am?: string;
   author_name_am?: string | null;
   author_slug?: string | null;
-  match?: "fts" | "trigram";
+  match?: "fts" | "trigram" | "advanced" | "trigram_fallback";
 };
 
 export type SearchAuthor = {
@@ -102,25 +102,36 @@ export const searchKeys = {
 // ---------- Hooks ----------
 
 /** Unified search (verses + commentaries). Best for the "all" scope. */
+/** Unified search (verses + commentaries). Best for the "all" scope. */
 export function useUnifiedSearch(
   q: string,
   scope: "all" | "verses" | "commentaries" = "all",
-  opts?: { enabled?: boolean; highlight?: boolean },
+  opts?: {
+    enabled?: boolean;
+    highlight?: boolean;
+    mode?: "fts" | "trigram" | "both" | "advanced";
+  },
 ) {
   const trimmed = q.trim();
   return useQuery({
     enabled: (opts?.enabled ?? true) && trimmed.length >= 2,
-    queryKey: searchKeys.unified(trimmed, scope),
+    queryKey: searchKeys.unified(
+      trimmed,
+      scope,
+    ) as unknown as readonly unknown[],
     queryFn: () =>
-      request<UnifiedSearchResponse>("/api/search", {
-        query: {
-          q: trimmed,
-          scope,
-          mode: "both",
-          limit: 30,
-          highlight: opts?.highlight ?? true,
+      request<UnifiedSearchResponse & { mode?: string; tsquery?: string }>(
+        "/api/search",
+        {
+          query: {
+            q: trimmed,
+            scope,
+            mode: opts?.mode ?? "both",
+            limit: 30,
+            highlight: opts?.highlight ?? true,
+          },
         },
-      }),
+      ),
     placeholderData: keepPreviousData,
     staleTime: 60 * 1000,
   });
@@ -215,4 +226,249 @@ export function useSuggest(q: string, opts?: { enabled?: boolean }) {
       }),
     staleTime: 5 * 60 * 1000,
   });
+}
+// ------------------------------------------------------------
+// Reference-based queries
+// ------------------------------------------------------------
+import { useQueries } from "@tanstack/react-query";
+import type { ChapterOut } from "@/api/queries/bible";
+import {
+  parseReference,
+  verseSpecForBackend,
+  type ParsedRefSegment,
+} from "@/lib/parseReference";
+
+type RefVerseResult = {
+  bookSlug: string;
+  bookNameAm: string;
+  chapter: number;
+  verseNumber: number;
+  verseNumberEthiopic: string | null;
+  textAm: string;
+  verseId: number;
+};
+
+/**
+ * Fetch verses from a parsed reference. Handles:
+ *  - single segment (book + chapter + versespec)
+ *  - multi-segment (loop of the above)
+ *  - chapter range (mat 1-3)
+ *
+ * Returns a flat, ordered list of verses ready to render.
+ */
+// ------------------------------------------------------------
+// Book identifier resolution (via suggest)
+// ------------------------------------------------------------
+/**
+ * Given a book identifier the user typed ("mat", "matthew", "ማቴ"),
+ * resolve it to a canonical book slug via the suggest endpoint.
+ * Falls back to using the identifier as-is if nothing matches.
+ */
+export function useResolvedBookSlug(
+  identifier: string | null,
+  opts?: { enabled?: boolean },
+) {
+  const trimmed = identifier?.trim() ?? "";
+  return useQuery({
+    enabled: (opts?.enabled ?? true) && trimmed.length >= 2,
+    queryKey: ["search", "resolve-book", trimmed],
+    queryFn: async () => {
+      const data = await request<SuggestResponse>("/api/search/suggest", {
+        query: { q: trimmed, limit: 8 },
+      });
+      // Prefer a book suggestion whose label matches the identifier closely.
+      const books = data.suggestions.filter((s) => s.type === "book");
+      if (books.length === 0) {
+        // No book suggestion — fall through to raw identifier
+        return trimmed.toLowerCase();
+      }
+      // Prefer exact match on slug first
+      const lower = trimmed.toLowerCase();
+      const exact = books.find((b) => b.slug.toLowerCase() === lower);
+      if (exact) return exact.slug;
+      // Otherwise, take the first suggestion
+      return books[0].slug;
+    },
+    staleTime: 60 * 60 * 1000, // book resolution is stable
+  });
+}
+
+// ------------------------------------------------------------
+// Reference-based queries
+// ------------------------------------------------------------
+type RefVerseResult = {
+  bookSlug: string;
+  bookNameAm: string;
+  chapter: number;
+  verseNumber: number;
+  verseNumberEthiopic: string | null;
+  textAm: string;
+  verseId: number;
+};
+
+/**
+ * Fetch verses from a parsed reference. Handles:
+ *  - single segment (book + chapter + versespec)
+ *  - multi-segment (loop of the above)
+ *  - chapter range (mat 1-3)
+ *
+ * Resolves each book identifier via the suggest endpoint before
+ * requesting the actual verses.
+ */
+export function useVerseReference(query: string, opts?: { enabled?: boolean }) {
+  const parsed = parseReference(query);
+  const enabled = (opts?.enabled ?? true) && parsed !== null;
+
+  // Collect the distinct book identifiers we need to resolve.
+  const bookIdentifiers = parsed
+    ? parsed.kind === "verses"
+      ? Array.from(new Set(parsed.segments.map((s) => s.bookQuery)))
+      : [parsed.range.bookQuery]
+    : [];
+
+  // Resolve each identifier in parallel.
+  const resolvedBooks = useQueries({
+    queries: bookIdentifiers.map((id) => ({
+      queryKey: ["search", "resolve-book", id.trim()],
+      queryFn: async () => {
+        const data = await request<SuggestResponse>("/api/search/suggest", {
+          query: { q: id.trim(), limit: 8 },
+        });
+        const books = data.suggestions.filter((s) => s.type === "book");
+        if (books.length === 0) return id.trim().toLowerCase();
+        const lower = id.trim().toLowerCase();
+        const exact = books.find((b) => b.slug.toLowerCase() === lower);
+        if (exact) return exact.slug;
+        return books[0].slug;
+      },
+      enabled,
+      staleTime: 60 * 60 * 1000,
+    })),
+  });
+
+  // Map identifier → resolved slug
+  const slugMap = new Map<string, string>();
+  bookIdentifiers.forEach((id, i) => {
+    const resolved = resolvedBooks[i]?.data;
+    if (resolved) slugMap.set(id, resolved);
+  });
+
+  // Wait for all resolutions before fetching verses
+  const allResolved =
+    !enabled ||
+    bookIdentifiers.length === 0 ||
+    resolvedBooks.every((q) => q.isSuccess || q.isError);
+
+  // Verse queries, one per segment
+  const segmentQueries = useQueries({
+    queries:
+      parsed?.kind === "verses" && allResolved
+        ? parsed.segments.map((seg) => {
+            const slug =
+              slugMap.get(seg.bookQuery) ?? seg.bookQuery.toLowerCase();
+            return {
+              queryKey: ["bible", "ref", slug, seg.chapter, seg.verseSpec],
+              queryFn: async () => {
+                const spec = verseSpecForBackend(seg.verseSpec);
+                const url = `/api/bible/${encodeURIComponent(slug)}/${seg.chapter}/${spec}`;
+                return request<{ verses: ChapterOut["verses"] }>(url);
+              },
+              enabled,
+              staleTime: 5 * 60 * 1000,
+              retry: false,
+            };
+          })
+        : [],
+  });
+
+  // Range queries for chapter-range refs
+  const rangeQueries = useQueries({
+    queries:
+      parsed?.kind === "chapters" && allResolved
+        ? (() => {
+            const slug =
+              slugMap.get(parsed.range.bookQuery) ??
+              parsed.range.bookQuery.toLowerCase();
+            const count =
+              parsed.range.endChapter - parsed.range.startChapter + 1;
+            return Array.from({ length: count }, (_, i) => {
+              const chapter = parsed.range.startChapter + i;
+              return {
+                queryKey: ["bible", "ref", slug, chapter, null],
+                queryFn: async () => {
+                  const url = `/api/bible/${encodeURIComponent(slug)}/${chapter}`;
+                  return request<ChapterOut>(url);
+                },
+                enabled,
+                staleTime: 5 * 60 * 1000,
+                retry: false,
+              };
+            });
+          })()
+        : [],
+  });
+
+  // Aggregate state
+  const isLoading =
+    enabled &&
+    (resolvedBooks.some((q) => q.isLoading) ||
+      (parsed?.kind === "verses"
+        ? segmentQueries.some((q) => q.isLoading)
+        : parsed?.kind === "chapters"
+          ? rangeQueries.some((q) => q.isLoading)
+          : false));
+
+  const isError =
+    enabled &&
+    (parsed?.kind === "verses"
+      ? segmentQueries.every((q) => q.isError)
+      : parsed?.kind === "chapters"
+        ? rangeQueries.every((q) => q.isError)
+        : false);
+
+  // Flatten
+  const verses: RefVerseResult[] = [];
+
+  if (parsed?.kind === "verses") {
+    segmentQueries.forEach((q, idx) => {
+      const seg = parsed.segments[idx];
+      const data = q.data;
+      if (!data || !("verses" in data)) return;
+      const slug = slugMap.get(seg.bookQuery) ?? seg.bookQuery.toLowerCase();
+      for (const v of data.verses) {
+        verses.push({
+          bookSlug: slug,
+          bookNameAm: v.book_name_am ?? seg.bookQuery,
+          chapter: v.chapter,
+          verseNumber: v.verse_number,
+          verseNumberEthiopic: v.verse_number_ethiopic ?? null,
+          textAm: v.text_am,
+          verseId: v.id,
+        });
+      }
+    });
+  } else if (parsed?.kind === "chapters") {
+    rangeQueries.forEach((q) => {
+      const data = q.data;
+      if (!data) return;
+      for (const v of data.verses) {
+        verses.push({
+          bookSlug: data.book.slug,
+          bookNameAm: data.book.name_am,
+          chapter: v.chapter,
+          verseNumber: v.verse_number,
+          verseNumberEthiopic: v.verse_number_ethiopic ?? null,
+          textAm: v.text_am,
+          verseId: v.id,
+        });
+      }
+    });
+  }
+
+  return {
+    parsed,
+    verses,
+    isLoading,
+    isError,
+  };
 }

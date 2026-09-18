@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useReaderStore } from "@/stores/readerStore";
 import { FONT_SIZE_CLASS } from "@/lib/fontSize";
 import { highlightTextColor } from "@/lib/highlightColors";
+import { fontFamilyStack } from "@/lib/fontFamily";
 
 type Props = {
   verse: VerseOut;
@@ -17,6 +18,7 @@ type Props = {
 export const VerseItem = forwardRef<HTMLButtonElement, Props>(
   ({ verse, isSelected, onSelect, highlightColor, hasNote }, ref) => {
     const fontSize = useReaderStore((s) => s.fontSize);
+    const fontFamily = useReaderStore((s) => s.fontFamily);
     const commentaryCount = verse.commentary_count ?? 0;
     const sizeClass = FONT_SIZE_CLASS[fontSize];
     const textColor = highlightTextColor(highlightColor);
@@ -33,7 +35,7 @@ export const VerseItem = forwardRef<HTMLButtonElement, Props>(
           "group relative block w-full cursor-pointer text-left",
           "rounded-md px-2 py-2 -mx-2",
           "transition-colors duration-150",
-          isSelected ? "bg-gold-500/[0.07]" : "hover:bg-stone-900/60",
+          isSelected ? "bg-gold-500/[0.07]" : "hover:bg-surface-raised/40",
         )}
       >
         {/* Selection indicator */}
@@ -62,12 +64,14 @@ export const VerseItem = forwardRef<HTMLButtonElement, Props>(
           <div className="flex-1 min-w-0">
             <p
               className={cn(
-                "text-balance rounded-sm transition-colors duration-200",
+                "font-amharic text-[15px] leading-[1.9] text-text-primary text-justify hyphens-auto",
                 sizeClass,
               )}
               style={{
-                fontFamily: `'Menbere', 'Nyala', 'Noto Serif Ethiopic', serif`,
-                color: isHighlighted ? textColor : "rgb(250 250 249)", // text-text-primary
+                fontFamily: fontFamilyStack(fontFamily),
+                color: isHighlighted
+                  ? textColor
+                  : "rgb(var(--color-text-primary))",
               }}
             >
               {verse.text_am}
@@ -79,11 +83,11 @@ export const VerseItem = forwardRef<HTMLButtonElement, Props>(
                 {commentaryCount > 0 && (
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5",
+                      "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5",
                       "text-[11px] font-medium tabular-nums transition-colors",
                       isSelected
                         ? "bg-gold-500/20 text-gold-300"
-                        : "bg-surface-raised text-text-muted group-hover:text-text-secondary",
+                        : "bg-surface-raised text-text-secondary group-hover:text-text-primary",
                     )}
                   >
                     <MessageCircle className="h-3 w-3" strokeWidth={2.25} />
@@ -94,11 +98,11 @@ export const VerseItem = forwardRef<HTMLButtonElement, Props>(
                 {hasNote && (
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5",
+                      "ml-1.5 mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5",
                       "text-[11px] font-medium transition-colors",
                       isSelected
-                        ? "bg-teal-500/20 text-teal-300"
-                        : "bg-teal-500/10 text-teal-400",
+                        ? "bg-gold-500/25 text-gold-400"
+                        : "bg-gold-500/15 text-gold-500",
                     )}
                     title="ማስታወሻ አለ"
                   >

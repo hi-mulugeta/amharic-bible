@@ -9,7 +9,7 @@ import { renderMarked } from "@/lib/mark";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { toEthiopicNumeral } from "@/lib/ethiopic";
-
+import { cn } from "@/lib/utils";
 type Props = {
   data: UnifiedSearchResponse | undefined;
   isLoading: boolean;
@@ -90,19 +90,55 @@ function SectionHeader({
   );
 }
 
+function MatchBadge({ match }: { match?: string }) {
+  if (!match) return null;
+
+  const label =
+    match === "fts"
+      ? "ትክክለኛ"
+      : match === "trigram"
+        ? "ተመሳሳይ"
+        : match === "advanced"
+          ? "የላቀ"
+          : match === "trigram_fallback"
+            ? "ግምታዊ"
+            : match;
+
+  const color =
+    match === "advanced" || match === "fts"
+      ? "bg-gold-500/15 text-gold-500"
+      : "bg-surface-raised text-text-faint";
+
+  return (
+    <span
+      className={cn(
+        "inline-block rounded-sm px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider",
+        color,
+      )}
+    >
+      {label}
+    </span>
+  );
+}
+
 function VerseResult({ verse }: { verse: SearchVerse }) {
   const ref = verse.book_name_am
-    ? `${verse.book_name_am} ${toEthiopicNumeral(verse.chapter)}:${verse.verse_number_ethiopic ?? verse.verse_number}`
+    ? `${verse.book_name_am} ${toEthiopicNumeral(verse.chapter)}:${
+        verse.verse_number_ethiopic ?? verse.verse_number
+      }`
     : `${verse.chapter}:${verse.verse_number}`;
 
   return (
     <Link
-      to={`/bible/${verse.book_slug ?? verse.book_id}/${verse.chapter}?verse=${verse.verse_number}`}
+      to={`/bible/${verse.book_slug ?? verse.book_id}/${verse.chapter}`}
       className="block px-4 py-4 transition-colors hover:bg-surface-raised/40"
     >
-      <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-gold-500/80">
-        {ref}
-      </p>
+      <div className="mb-1.5 flex items-center gap-2 flex-wrap">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-gold-500/80">
+          {ref}
+        </p>
+        <MatchBadge match={verse.match} />
+      </div>
       <p className="font-amharic text-[16px] leading-[1.9] text-text-primary">
         {renderMarked(verse.text_am)}
       </p>
@@ -114,22 +150,21 @@ function CommentaryResult({ commentary }: { commentary: SearchCommentary }) {
   const body = commentary.excerpt_am ?? commentary.content_am ?? "";
 
   return (
-    <Link
-      to={`/bible/verse/${commentary.verse_id}`}
-      className="block px-4 py-4 transition-colors hover:bg-surface-raised/40"
-    >
-      {commentary.author_name_am && (
-        <p className="mb-1.5 font-amharic text-[12px] font-medium text-gold-500/80">
-          {commentary.author_name_am}
-        </p>
-      )}
+    <div className="px-4 py-4">
+      <div className="mb-1.5 flex items-center gap-2 flex-wrap">
+        {commentary.author_name_am && (
+          <p className="font-amharic text-[12px] font-medium text-gold-500/80">
+            {commentary.author_name_am}
+          </p>
+        )}
+        <MatchBadge match={commentary.match} />
+      </div>
       <p className="font-amharic text-[15px] leading-[1.9] text-text-secondary">
         {renderMarked(body)}
       </p>
-    </Link>
+    </div>
   );
 }
-
 function ResultsSkeleton() {
   return (
     <div className="space-y-8">

@@ -23,7 +23,7 @@ export function renderMarked(input: string | null | undefined): ReactNode {
     parts.push(
       <mark
         key={key++}
-        className="bg-gold-500/25 text-gold-200 rounded-sm px-0.5"
+        className="rounded-sm bg-gold-500/25 px-0.5 text-gold-500"
       >
         {inner}
       </mark>,

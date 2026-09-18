@@ -13,8 +13,6 @@ type Props = {
 export function VerseTagsFooter({ bookSlug, chapter, verseNumber }: Props) {
   const { data, isLoading } = useVerseTags(bookSlug, chapter, verseNumber);
 
-  // Completely hidden when there's nothing to show.
-  // (No "no tags" message — silence is the right default here.)
   if (!isLoading && (!data || data.length === 0)) return null;
 
   return (
@@ -40,8 +38,8 @@ export function VerseTagsFooter({ bookSlug, chapter, verseNumber }: Props) {
                 className={cn(
                   "inline-flex items-center gap-1 rounded-full px-3 py-1",
                   "bg-surface-raised text-text-secondary",
-                  "transition-colors hover:bg-surface-raised/80 hover:text-text-primary",
                   "font-amharic text-[13px]",
+                  "transition-colors hover:bg-surface-raised/80 hover:text-text-primary",
                 )}
               >
                 <Hash className="h-3 w-3 text-text-faint" />

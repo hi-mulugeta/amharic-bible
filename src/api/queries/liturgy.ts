@@ -199,3 +199,104 @@ export function useUpcomingFeasts(days = 90) {
     staleTime: 60 * 60 * 1000,
   });
 }
+// ============================================================
+// Calendar & additional saint queries
+// ============================================================
+
+export type CalendarMonth = {
+  month: number;
+  month_name: string;
+  feasts: FeastDayOut[];
+};
+
+export type CalendarYear = {
+  ethiopian_year: number;
+  gregorian_new_year: string;
+  months: CalendarMonth[];
+};
+
+export function useFeastsCalendar(year: number | undefined) {
+  return useQuery({
+    enabled: typeof year === "number",
+    queryKey: [...liturgyKeys.all, "calendar", year ?? 0],
+    queryFn: () => request<CalendarYear>(`/api/liturgy/calendar/${year}`),
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+export function useSaintsForDate(d: string | undefined) {
+  return useQuery({
+    enabled: Boolean(d),
+    queryKey: [...liturgyKeys.all, "saints", "date", d ?? ""],
+    queryFn: () => request<SaintOut[]>(`/api/liturgy/saints/${d}`),
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+// ============================================================
+// Prayers
+// ============================================================
+
+export type PrayerSummary = {
+  id: number;
+  slug: string;
+  title_am: string;
+  title_en: string | null;
+  category: string | null;
+  source_am: string | null;
+};
+
+export type PrayerOut = PrayerSummary & {
+  body_am: string;
+  body_transliteration: string | null;
+  body_en: string | null;
+};
+
+export function usePrayers(opts?: {
+  page?: number;
+  perPage?: number;
+  category?: string;
+}) {
+  const page = opts?.page ?? 1;
+  return useQuery({
+    queryKey: [...liturgyKeys.all, "prayers", page, opts?.category ?? "all"],
+    queryFn: () =>
+      request<{
+        data: PrayerSummary[];
+        meta: {
+          page: number;
+          per_page: number;
+          total: number;
+          pages: number;
+          has_next: boolean;
+          has_prev: boolean;
+        };
+      }>("/api/liturgy/prayers", {
+        query: {
+          page,
+          per_page: opts?.perPage ?? 30,
+          category: opts?.category,
+        },
+      }),
+    placeholderData: (prev) => prev,
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+export function usePrayer(slug: string | undefined) {
+  return useQuery({
+    enabled: Boolean(slug),
+    queryKey: [...liturgyKeys.all, "prayer", slug ?? ""],
+    queryFn: () => request<PrayerOut>(`/api/liturgy/prayers/${slug}`),
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+export const PRAYER_CATEGORIES = [
+  { key: "morning", label: "የንጋት" },
+  { key: "evening", label: "የምሽት" },
+  { key: "eucharist", label: "የቅዱስ ቁርባን" },
+  { key: "marian", label: "ማርያማዊ" },
+  { key: "intercession", label: "ምልጃ" },
+  { key: "other", label: "ሌላ" },
+] as const;

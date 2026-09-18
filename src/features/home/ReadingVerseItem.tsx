@@ -3,6 +3,7 @@ import type { ReadingVerse } from "@/api/queries/liturgy";
 import { cn } from "@/lib/utils";
 import { useReaderStore } from "@/stores/readerStore";
 import { FONT_SIZE_CLASS } from "@/lib/fontSize";
+import { fontFamilyStack } from "@/lib/fontFamily";
 
 type Props = {
   verse: ReadingVerse;
@@ -18,6 +19,7 @@ export function ReadingVerseItem({
   highlightColor,
 }: Props) {
   const fontSize = useReaderStore((s) => s.fontSize);
+  const fontFamily = useReaderStore((s) => s.fontFamily);
   const commentaryCount = verse.commentary_count ?? 0;
   const sizeClass = FONT_SIZE_CLASS[fontSize];
   const isHighlighted = Boolean(highlightColor);
@@ -32,13 +34,13 @@ export function ReadingVerseItem({
         "group relative block w-full text-left",
         "rounded-md px-2 py-1.5 -mx-2",
         "transition-colors duration-150",
-        isSelected ? "bg-gold-500/[0.07]" : "hover:bg-stone-900/60",
+        isSelected ? "bg-gold-500/[0.07]" : "hover:bg-surface-raised/40",
       )}
     >
       <div className="flex gap-3">
         <span
           className={cn(
-            "mt-[6px] min-w-[1.5rem] text-right text-xs tabular-nums font-medium select-none transition-colors",
+            "mt-[6px] min-w-[1.5rem] text-right text-xs font-medium tabular-nums select-none transition-colors",
             isSelected
               ? "text-gold-500"
               : "text-text-faint group-hover:text-text-muted",
@@ -47,14 +49,14 @@ export function ReadingVerseItem({
           {verse.verse_number_ethiopic ?? verse.verse_number}
         </span>
 
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <p
             className={cn(sizeClass)}
             style={{
-              fontFamily: `'Menbere', 'Nyala', 'Noto Serif Ethiopic', serif`,
+              fontFamily: fontFamilyStack(fontFamily),
               color: isHighlighted
-                ? highlightTextColor(highlightTextColor)
-                : "rgb(214 211 209)", // text-text-secondary
+                ? "rgb(var(--color-accent))"
+                : "rgb(var(--color-text-secondary))",
             }}
           >
             {verse.text_am}
@@ -66,8 +68,8 @@ export function ReadingVerseItem({
                 "mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5",
                 "text-[11px] font-medium tabular-nums transition-colors",
                 isSelected
-                  ? "bg-gold-500/20 text-gold-300"
-                  : "bg-surface-raised text-text-muted group-hover:text-text-secondary",
+                  ? "bg-gold-500/20 text-gold-400"
+                  : "bg-surface-raised text-text-secondary group-hover:text-text-primary",
               )}
             >
               <MessageCircle className="h-3 w-3" strokeWidth={2.25} />

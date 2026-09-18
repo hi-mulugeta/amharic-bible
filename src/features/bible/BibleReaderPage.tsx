@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 import { request } from "@/api/client";
 import { ChapterHeaderSkeleton } from "@/components/bible/ChapterHeaderSkeleton";
 import { VerseListSkeleton } from "@/components/bible/VerseListSkeleton";
+import { useChapterAudio } from "@/api/queries/audio";
+import { AudioPlayer } from "@/components/audio/AudioPlayer";
 
 export function BibleReaderPage() {
   const { book: bookSlug = "matthew", chapter: chapterStr = "1" } = useParams();
@@ -70,6 +72,7 @@ export function BibleReaderPage() {
   const highlights = useHighlightsForChapter(bookSlug, chapter, {
     enabled: isAuthenticated && !isNumericSlug,
   });
+  const chapterAudio = useChapterAudio(bookSlug, chapter, translationCode);
 
   const notesQuery = useNotes({ page: 1, enabled: isAuthenticated });
 
@@ -163,6 +166,16 @@ export function BibleReaderPage() {
 
       {/* Center: Reading area */}
       <main className="min-w-0 flex-1">
+        {/* Sticky audio player — pinned below navbar, full width of reading column */}
+        {chapterAudio.data && (
+          <div className="sticky top-14 z-30 w-full border-b border-surface-border bg-surface/95 backdrop-blur-sm">
+            <AudioPlayer
+              audio={chapterAudio.data}
+              resetKey={`${bookSlug}/${chapter}`}
+            />
+          </div>
+        )}
+
         <div className="mx-auto max-w-reading px-5 py-8 md:px-8 md:py-12">
           {/* Mobile toolbar */}
           <div className="mb-6 flex items-center gap-2 lg:hidden">
@@ -237,7 +250,7 @@ export function BibleReaderPage() {
       {/* Mobile: Book drawer */}
       <Dialog.Root open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-sm lg:hidden" />
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm lg:hidden" />
           <Dialog.Content className="fixed inset-y-0 left-0 z-50 w-72 border-r border-surface-border bg-stone-950 lg:hidden animate-fade-in">
             <Dialog.Title className="sr-only">መጻሕፍት</Dialog.Title>
             <div className="flex h-full flex-col pt-14">
@@ -253,8 +266,8 @@ export function BibleReaderPage() {
 
       {/* Mobile: Commentary bottom sheet */}
       {commentaryOpen && selectedVerse && (
-        <div className="fixed inset-x-0 bottom-0 z-40 max-h-[75vh] rounded-t-2xl border-t border-surface-border bg-stone-950 lg:hidden animate-slide-up">
-          <div className="mx-auto my-2 h-1 w-10 rounded-full bg-stone-700" />
+        <div className="fixed inset-x-0 bottom-0 z-40 max-h-[75vh] rounded-t-2xl border-t border-surface-border bg-surface lg:hidden animate-slide-up">
+          <div className="mx-auto my-2 h-1 w-10 rounded-full bg-text-faint" />
           <div className="h-[70vh] overflow-hidden">
             <CommentaryPanel
               verse={selectedVerse}
@@ -273,7 +286,7 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
       <p className="font-amharic text-text-muted mb-4">ምዕራፉን መጫን አልተቻለም</p>
       <button
         onClick={onRetry}
-        className="rounded-lg bg-surface-raised px-4 py-2 text-sm text-text-primary hover:bg-stone-800"
+        className="rounded-lg bg-surface-raised px-4 py-2 text-sm text-text-primary hover:bg-surface-sunken"
       >
         እንደገና ሞክር
       </button>

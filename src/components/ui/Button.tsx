@@ -18,7 +18,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               variant === "primary",
             "text-text-secondary hover:text-text-primary hover:bg-surface-raised":
               variant === "ghost",
-            "bg-surface-raised text-text-primary hover:bg-stone-800":
+            "bg-surface-raised text-text-primary hover:bg-surface-sunken":
               variant === "subtle",
           },
           {

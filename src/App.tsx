@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { BibleReaderPage } from "@/features/bible/BibleReaderPage";
@@ -13,9 +14,21 @@ import { RegisterPage } from "@/features/auth/RegisterPage";
 import { AdminLayout } from "@/features/admin/AdminLayout";
 import { SettingsPage } from "@/features/settings/SettingsPage";
 import { LibraryPage } from "@/features/library/LibraryPage";
+import { LiturgyPage } from "@/features/liturgy/LiturgyPage";
+import { LiturgyPrayerDetailPage } from "@/features/liturgy/LiturgyPrayerDetailPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
+import { useReaderStore } from "@/stores/readerStore";
 
 export default function App() {
+  const theme = useReaderStore((s) => s.theme);
+
+  // Apply theme class to <html> for CSS variable scoping
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove("theme-stone", "theme-parchment", "theme-midnight");
+    root.classList.add(`theme-${theme}`);
+  }, [theme]);
+
   return (
     <AppShell>
       <Routes>
@@ -36,6 +49,11 @@ export default function App() {
         <Route path="/admin" element={<AdminLayout />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/library" element={<LibraryPage />} />
+        <Route path="/liturgy" element={<LiturgyPage />} />
+        <Route
+          path="/liturgy/prayers/:slug"
+          element={<LiturgyPrayerDetailPage />}
+        />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AppShell>

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { VerseConnections } from "./VerseConnections";
 import {
   X,
   MessageCircle,
@@ -20,6 +19,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmButton } from "@/components/ui/ConfirmButton";
 import { CommentaryCard } from "./CommentaryCard";
 import { VerseTagsFooter } from "./VerseTagsFooter";
+import { VerseConnections } from "./VerseConnections";
+import { VerseComments } from "./VerseComments";
 import { VerseActions } from "@/components/bible/VerseActions";
 import { ApiRequestError } from "@/api/client";
 import { cn } from "@/lib/utils";
@@ -130,20 +131,19 @@ export function CommentaryPanel({ verse, onClose }: Props) {
   const busy = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="flex h-full flex-col bg-stone-950">
+    <div className="flex h-full flex-col bg-surface">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 border-b border-surface-border p-5">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] uppercase tracking-wider text-text-faint font-medium">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-text-faint">
             ትርጓሜ
           </p>
           {verse && (
-            <p className="mt-1 font-amharic text-sm text-text-secondary truncate">
+            <p className="mt-1 truncate font-amharic text-sm text-text-secondary">
               {verse.book_name_am ?? ""} {verse.verse_number ?? ""}
             </p>
           )}
         </div>
-
         <div className="flex items-center gap-2">
           {verse && (
             <VerseActions
@@ -168,13 +168,13 @@ export function CommentaryPanel({ verse, onClose }: Props) {
       <div className="flex-1 overflow-y-auto">
         {!verse ? (
           <div className="flex h-full items-center justify-center p-8">
-            <p className="max-w-[240px] text-center font-amharic text-sm text-text-faint leading-relaxed">
+            <p className="max-w-[240px] text-center font-amharic text-sm leading-relaxed text-text-faint">
               ትርጓሜ ለማየት ማንኛውንም ጥቅስ ይጫኑ
             </p>
           </div>
         ) : (
           <>
-            {/* Personal note — inline, above commentaries */}
+            {/* Personal note */}
             {(hasNotes || editing) && (
               <section className="border-b border-surface-border bg-gold-500/[0.03] p-5">
                 <header className="mb-3 flex items-center justify-between">
@@ -201,7 +201,7 @@ export function CommentaryPanel({ verse, onClose }: Props) {
                     {notes.data!.map((n) => (
                       <p
                         key={n.id}
-                        className="font-amharic text-[15px] leading-[1.9] text-text-secondary whitespace-pre-line"
+                        className="whitespace-pre-line font-amharic text-[15px] leading-[1.9] text-text-secondary"
                       >
                         {n.content_am}
                       </p>
@@ -212,7 +212,7 @@ export function CommentaryPanel({ verse, onClose }: Props) {
                     <div className="relative">
                       <div
                         className={cn(
-                          "absolute left-0 top-3 bottom-3 w-[3px] rounded-full transition-colors",
+                          "absolute bottom-3 left-0 top-3 w-[3px] rounded-full transition-colors",
                           colorBar(draftColor),
                         )}
                         aria-hidden
@@ -224,11 +224,11 @@ export function CommentaryPanel({ verse, onClose }: Props) {
                         autoFocus
                         placeholder="ስለዚህ ጥቅስ ያሰቡትን ይጻፉ..."
                         className={cn(
-                          "w-full rounded-lg border border-surface-border bg-stone-950/50",
-                          "pl-5 pr-3 py-3",
+                          "w-full rounded-lg border border-surface-border bg-surface-sunken/50",
+                          "py-3 pl-5 pr-3",
                           "font-amharic text-[15px] leading-[1.9] text-text-primary placeholder:text-text-faint",
-                          "transition-colors resize-none",
-                          "focus:border-gold-500/40 focus:bg-stone-950/70 focus:outline-none",
+                          "resize-none transition-colors",
+                          "focus:border-gold-500/40 focus:bg-surface-sunken/70 focus:outline-none",
                         )}
                       />
                     </div>
@@ -250,8 +250,8 @@ export function CommentaryPanel({ verse, onClose }: Props) {
                               "h-5 w-5 rounded-full transition-all",
                               c.dot,
                               active
-                                ? "ring-2 ring-offset-2 ring-offset-stone-950 ring-gold-500/50 scale-110"
-                                : "opacity-60 hover:opacity-100 hover:scale-105",
+                                ? "scale-110 ring-2 ring-gold-500/50 ring-offset-2 ring-offset-surface"
+                                : "opacity-60 hover:scale-105 hover:opacity-100",
                             )}
                           />
                         );
@@ -270,13 +270,12 @@ export function CommentaryPanel({ verse, onClose }: Props) {
                           onConfirm={removeNote}
                           busy={deleteMutation.isPending}
                         >
-                          <Trash2 className="inline h-3.5 w-3.5 mr-1 align-[-2px]" />
+                          <Trash2 className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />
                           ሰርዝ
                         </ConfirmButton>
                       ) : (
                         <span />
                       )}
-
                       <div className="flex gap-2">
                         <button
                           type="button"
@@ -333,29 +332,28 @@ export function CommentaryPanel({ verse, onClose }: Props) {
                 ))}
               </div>
             ) : null}
-          </>
-        )}
-        {verse && (
-          <VerseConnections
-            bookSlug={verse.book}
-            chapter={verse.chapter}
-            verseNumber={verse.verse_number}
-          />
-        )}
 
-        {verse && (
-          <VerseTagsFooter
-            bookSlug={verse.book}
-            chapter={verse.chapter}
-            verseNumber={verse.verse_number}
-          />
-        )}
-        {verse && (
-          <VerseTagsFooter
-            bookSlug={verse.book}
-            chapter={verse.chapter}
-            verseNumber={verse.verse_number}
-          />
+            {/* Connections */}
+            {verse && (
+              <VerseConnections
+                bookSlug={verse.book}
+                chapter={verse.chapter}
+                verseNumber={verse.verse_number}
+              />
+            )}
+
+            {/* Community comments */}
+            {verse && <VerseComments verseId={verse.id} />}
+
+            {/* Tags */}
+            {verse && (
+              <VerseTagsFooter
+                bookSlug={verse.book}
+                chapter={verse.chapter}
+                verseNumber={verse.verse_number}
+              />
+            )}
+          </>
         )}
       </div>
     </div>

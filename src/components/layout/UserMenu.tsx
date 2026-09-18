@@ -16,7 +16,6 @@ export function UserMenu() {
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
@@ -59,9 +58,8 @@ export function UserMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-xl border border-surface-border bg-stone-950 shadow-2xl animate-fade-in"
+          className="absolute right-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-xl border border-surface-border bg-surface shadow-2xl animate-fade-in"
         >
-          {/* Header */}
           <div className="border-b border-surface-border px-4 py-3">
             <p className="truncate font-amharic text-[14px] font-medium text-text-primary">
               {user.display_name_am ?? user.username}
@@ -76,9 +74,6 @@ export function UserMenu() {
             )}
           </div>
 
-          {/* Items */}
-          {/* Items */}
-          {/* Items */}
           <div className="py-1">
             <MenuItem
               to="/library"
@@ -112,7 +107,6 @@ export function UserMenu() {
             </MenuItem>
           </div>
 
-          {/* Logout */}
           <div className="border-t border-surface-border py-1">
             <button
               type="button"
