@@ -1,5 +1,7 @@
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueries, keepPreviousData } from "@tanstack/react-query";
 import { request } from "@/api/client";
+import type { ChapterOut } from "@/api/queries/bible";
+import { parseReference, verseSpecForBackend } from "@/lib/parseReference";
 
 // ---------- Types ----------
 
@@ -70,6 +72,16 @@ export type Paged<T> = {
   };
 };
 
+type RefVerseResult = {
+  bookSlug: string;
+  bookNameAm: string;
+  chapter: number;
+  verseNumber: number;
+  verseNumberEthiopic: string | null;
+  textAm: string;
+  verseId: number;
+};
+
 // ---------- Keys ----------
 
 export const searchKeys = {
@@ -97,11 +109,13 @@ export const searchKeys = {
   authors: (q: string, page: number) =>
     [...searchKeys.all, "authors", q, page] as const,
   suggest: (q: string) => [...searchKeys.all, "suggest", q] as const,
+  resolveBook: (id: string) => [...searchKeys.all, "resolve-book", id] as const,
+  ref: (slug: string, chapter: number, spec: string | null) =>
+    ["bible", "ref", slug, chapter, spec] as const,
 };
 
 // ---------- Hooks ----------
 
-/** Unified search (verses + commentaries). Best for the "all" scope. */
 /** Unified search (verses + commentaries). Best for the "all" scope. */
 export function useUnifiedSearch(
   q: string,
@@ -227,38 +241,11 @@ export function useSuggest(q: string, opts?: { enabled?: boolean }) {
     staleTime: 5 * 60 * 1000,
   });
 }
-// ------------------------------------------------------------
-// Reference-based queries
-// ------------------------------------------------------------
-import { useQueries } from "@tanstack/react-query";
-import type { ChapterOut } from "@/api/queries/bible";
-import {
-  parseReference,
-  verseSpecForBackend,
-  type ParsedRefSegment,
-} from "@/lib/parseReference";
 
-type RefVerseResult = {
-  bookSlug: string;
-  bookNameAm: string;
-  chapter: number;
-  verseNumber: number;
-  verseNumberEthiopic: string | null;
-  textAm: string;
-  verseId: number;
-};
-
-/**
- * Fetch verses from a parsed reference. Handles:
- *  - single segment (book + chapter + versespec)
- *  - multi-segment (loop of the above)
- *  - chapter range (mat 1-3)
- *
- * Returns a flat, ordered list of verses ready to render.
- */
 // ------------------------------------------------------------
 // Book identifier resolution (via suggest)
 // ------------------------------------------------------------
+
 /**
  * Given a book identifier the user typed ("mat", "matthew", "ማቴ"),
  * resolve it to a canonical book slug via the suggest endpoint.
@@ -271,40 +258,28 @@ export function useResolvedBookSlug(
   const trimmed = identifier?.trim() ?? "";
   return useQuery({
     enabled: (opts?.enabled ?? true) && trimmed.length >= 2,
-    queryKey: ["search", "resolve-book", trimmed],
+    queryKey: searchKeys.resolveBook(trimmed),
     queryFn: async () => {
       const data = await request<SuggestResponse>("/api/search/suggest", {
         query: { q: trimmed, limit: 8 },
       });
-      // Prefer a book suggestion whose label matches the identifier closely.
       const books = data.suggestions.filter((s) => s.type === "book");
       if (books.length === 0) {
-        // No book suggestion — fall through to raw identifier
         return trimmed.toLowerCase();
       }
-      // Prefer exact match on slug first
       const lower = trimmed.toLowerCase();
       const exact = books.find((b) => b.slug.toLowerCase() === lower);
       if (exact) return exact.slug;
-      // Otherwise, take the first suggestion
-      return books[0].slug;
+      // Non-null assertion: we checked books.length > 0 above.
+      return books[0]!.slug;
     },
-    staleTime: 60 * 60 * 1000, // book resolution is stable
+    staleTime: 60 * 60 * 1000,
   });
 }
 
 // ------------------------------------------------------------
 // Reference-based queries
 // ------------------------------------------------------------
-type RefVerseResult = {
-  bookSlug: string;
-  bookNameAm: string;
-  chapter: number;
-  verseNumber: number;
-  verseNumberEthiopic: string | null;
-  textAm: string;
-  verseId: number;
-};
 
 /**
  * Fetch verses from a parsed reference. Handles:
@@ -320,16 +295,21 @@ export function useVerseReference(query: string, opts?: { enabled?: boolean }) {
   const enabled = (opts?.enabled ?? true) && parsed !== null;
 
   // Collect the distinct book identifiers we need to resolve.
-  const bookIdentifiers = parsed
-    ? parsed.kind === "verses"
-      ? Array.from(new Set(parsed.segments.map((s) => s.bookQuery)))
-      : [parsed.range.bookQuery]
-    : [];
+  const bookIdentifiers: string[] = [];
+  if (parsed) {
+    if (parsed.kind === "verses") {
+      bookIdentifiers.push(
+        ...Array.from(new Set(parsed.segments.map((s) => s.bookQuery))),
+      );
+    } else if (parsed.kind === "chapters") {
+      bookIdentifiers.push(parsed.range.bookQuery);
+    }
+  }
 
   // Resolve each identifier in parallel.
   const resolvedBooks = useQueries({
     queries: bookIdentifiers.map((id) => ({
-      queryKey: ["search", "resolve-book", id.trim()],
+      queryKey: searchKeys.resolveBook(id.trim()),
       queryFn: async () => {
         const data = await request<SuggestResponse>("/api/search/suggest", {
           query: { q: id.trim(), limit: 8 },
@@ -339,7 +319,7 @@ export function useVerseReference(query: string, opts?: { enabled?: boolean }) {
         const lower = id.trim().toLowerCase();
         const exact = books.find((b) => b.slug.toLowerCase() === lower);
         if (exact) return exact.slug;
-        return books[0].slug;
+        return books[0]!.slug;
       },
       enabled,
       staleTime: 60 * 60 * 1000,
@@ -359,7 +339,7 @@ export function useVerseReference(query: string, opts?: { enabled?: boolean }) {
     bookIdentifiers.length === 0 ||
     resolvedBooks.every((q) => q.isSuccess || q.isError);
 
-  // Verse queries, one per segment
+  // Verse queries, one per segment (only when parsed.kind === "verses")
   const segmentQueries = useQueries({
     queries:
       parsed?.kind === "verses" && allResolved
@@ -367,7 +347,11 @@ export function useVerseReference(query: string, opts?: { enabled?: boolean }) {
             const slug =
               slugMap.get(seg.bookQuery) ?? seg.bookQuery.toLowerCase();
             return {
-              queryKey: ["bible", "ref", slug, seg.chapter, seg.verseSpec],
+              queryKey: searchKeys.ref(
+                slug,
+                seg.chapter,
+                JSON.stringify(seg.verseSpec),
+              ),
               queryFn: async () => {
                 const spec = verseSpecForBackend(seg.verseSpec);
                 const url = `/api/bible/${encodeURIComponent(slug)}/${seg.chapter}/${spec}`;
@@ -381,20 +365,20 @@ export function useVerseReference(query: string, opts?: { enabled?: boolean }) {
         : [],
   });
 
-  // Range queries for chapter-range refs
+  // Range queries for chapter-range refs (only when parsed.kind === "chapters")
   const rangeQueries = useQueries({
     queries:
       parsed?.kind === "chapters" && allResolved
         ? (() => {
+            // TypeScript knows parsed.kind === "chapters" here
+            const range = parsed.range;
             const slug =
-              slugMap.get(parsed.range.bookQuery) ??
-              parsed.range.bookQuery.toLowerCase();
-            const count =
-              parsed.range.endChapter - parsed.range.startChapter + 1;
+              slugMap.get(range.bookQuery) ?? range.bookQuery.toLowerCase();
+            const count = range.endChapter - range.startChapter + 1;
             return Array.from({ length: count }, (_, i) => {
-              const chapter = parsed.range.startChapter + i;
+              const chapter = range.startChapter + i;
               return {
-                queryKey: ["bible", "ref", slug, chapter, null],
+                queryKey: searchKeys.ref(slug, chapter, null),
                 queryFn: async () => {
                   const url = `/api/bible/${encodeURIComponent(slug)}/${chapter}`;
                   return request<ChapterOut>(url);
@@ -432,6 +416,7 @@ export function useVerseReference(query: string, opts?: { enabled?: boolean }) {
   if (parsed?.kind === "verses") {
     segmentQueries.forEach((q, idx) => {
       const seg = parsed.segments[idx];
+      if (!seg) return;
       const data = q.data;
       if (!data || !("verses" in data)) return;
       const slug = slugMap.get(seg.bookQuery) ?? seg.bookQuery.toLowerCase();
