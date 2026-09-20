@@ -17,7 +17,7 @@ export function SaintDetailPage() {
   const { data, isLoading, isError } = useSaint(slug);
 
   return (
-    <div className="mx-auto max-w-reader px-5 py-10 md:px-8 md:py-14">
+    <div className="mx-auto max-w-reader px-5 py-10 md:max-w-shell md:px-12 md:py-17 lg:px-20">
       <Link
         to="/liturgy?tab=saints"
         className="inline-flex items-center gap-1.5 text-[13px] text-text-muted transition-colors hover:text-text-primary"

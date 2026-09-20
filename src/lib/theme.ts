@@ -23,6 +23,10 @@ export type ThemePalette = {
   accentHover: string;
   /** Accent muted — chips, badges */
   accentMuted: string;
+  /** Brand (logo red) — for brand-driven UI: active nav, logo marks */
+  brand: string;
+  /** Brand muted — subtle backgrounds behind brand elements */
+  brandMuted: string;
 };
 
 export const THEMES: Record<ReadingTheme, ThemePalette> = {
@@ -38,58 +42,57 @@ export const THEMES: Record<ReadingTheme, ThemePalette> = {
     accent: "#f5b235",
     accentHover: "#f8c95e",
     accentMuted: "rgba(245, 178, 53, 0.15)",
+    brand: "#e61919", // brightened red for dark bg contrast
+    brandMuted: "rgba(230, 25, 25, 0.15)",
   },
 
   parchment: {
-    surface: "#faf6ed", // warm cream — like aged paper
-    surfaceRaised: "#f3ecdc", // slightly darker cream for cards
-    surfaceSunken: "#efe5d0", // input backgrounds, code
-    border: "#e0d5be", // soft tan border
-    textPrimary: "#2a1f14", // deep brown ink
-    textSecondary: "#4a3a28", // warm brown
-    textMuted: "#7a6a52", // muted brown
-    textFaint: "#a89880", // faded ink
-    accent: "#b8860b", // darker, warmer gold that reads on cream
+    surface: "#faf6ed",
+    surfaceRaised: "#f3ecdc",
+    surfaceSunken: "#efe5d0",
+    border: "#e0d5be",
+    textPrimary: "#2a1f14",
+    textSecondary: "#4a3a28",
+    textMuted: "#7a6a52",
+    textFaint: "#a89880",
+    accent: "#b8860b",
     accentHover: "#d4a017",
     accentMuted: "rgba(184, 134, 11, 0.12)",
+    brand: "#cc0000", // original logo red reads fine on cream
+    brandMuted: "rgba(204, 0, 0, 0.10)",
   },
 
   midnight: {
-    surface: "#080b14", // near-black with blue undertone
-    surfaceRaised: "#0e1320", // deep navy-gray
+    surface: "#080b14",
+    surfaceRaised: "#0e1320",
     surfaceSunken: "#050810",
-    border: "#1a2233", // subtle blue-gray border
-    textPrimary: "#e8ecf3", // soft off-white, slight blue
+    border: "#1a2233",
+    textPrimary: "#e8ecf3",
     textSecondary: "#b0b8c8",
     textMuted: "#7a8497",
     textFaint: "#525c6e",
-    accent: "#d4af6e", // warm champagne gold — softer than stone's
+    accent: "#d4af6e",
     accentHover: "#e5c48a",
     accentMuted: "rgba(212, 175, 110, 0.15)",
+    brand: "#e61919", // brightened for blue-black bg
+    brandMuted: "rgba(230, 25, 25, 0.15)",
   },
 };
 
 export const THEME_LABELS: Record<ReadingTheme, string> = {
   parchment: "ብራና",
   stone: "ጨለማ",
-
   midnight: "ግማሽ ሌሊት",
 };
 
 export const THEME_DESCRIPTIONS: Record<ReadingTheme, string> = {
   parchment: "ቀላል እና ጽሑፋዊ",
   stone: "ንቁ እና ሞቅ ያለ",
-
   midnight: "ለረጅም ሌሊት ንባብ",
 };
-//parchment
 
 export const THEME_ORDER: ReadingTheme[] = ["parchment", "stone", "midnight"];
 
-/**
- * Preview colors for the settings page — a 3-color swatch showing
- * the theme's surface, text, and accent at a glance.
- */
 export function themePreviewColors(theme: ReadingTheme) {
   const p = THEMES[theme];
   return {

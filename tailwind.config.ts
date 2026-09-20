@@ -24,6 +24,25 @@ export default {
         },
 
         // ------------------------------------------------------------
+        // Brand — the logo red (#cc0000). Theme-aware so you can
+        // tune contrast per theme if needed.
+        // ------------------------------------------------------------
+        brand: {
+          DEFAULT: "rgb(var(--color-brand) / <alpha-value>)",
+          50: "#fef2f2",
+          100: "#fee2e2",
+          200: "#fecaca",
+          300: "#fca5a5",
+          400: "#f87171",
+          500: "rgb(var(--color-brand) / <alpha-value>)",
+          600: "#b30000",
+          700: "#990000",
+          800: "#7a0000",
+          900: "#5c0000",
+          950: "#2e0000",
+        },
+
+        // ------------------------------------------------------------
         // Semantic surface + text tokens. These are the ones that
         // actually change with the theme.
         // ------------------------------------------------------------

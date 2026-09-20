@@ -1,10 +1,11 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { BookOpen, Search, Menu } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { MobileNav } from "./MobileNav";
 import { UserMenu } from "./UserMenu";
 import { useAuth } from "@/auth/AuthContext";
+import { Logo } from "@/components/brand/Logo";
 
 export function Header() {
   const [navOpen, setNavOpen] = useState(false);
@@ -38,34 +39,25 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-surface-border bg-surface/80 backdrop-blur-lg">
-      <div className="mx-auto flex h-14 max-w-shell items-center gap-6 px-4 md:px-6">
-        {/* Mobile menu */}
-        <button
-          type="button"
-          onClick={() => setNavOpen(true)}
-          className="md:hidden -ml-2 p-2 text-text-secondary transition-colors hover:text-text-primary"
-          aria-label="ዝርዝር ክፈት"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
+      <div className="mx-auto grid h-16 max-w-shell grid-cols-[auto_1fr_auto] items-center gap-2 px-4 sm:gap-4 md:grid-cols-[1fr_auto_1fr] md:gap-6 md:px-6">
+        {/* LEFT: mobile menu + brand */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setNavOpen(true)}
+            className="md:hidden -ml-1 p-2 text-text-secondary transition-colors hover:text-text-primary"
+            aria-label="ዝርዝር ክፈት"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
 
-        {/* Brand */}
-        <Link to="/" className="group flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold-500/10 ring-1 ring-gold-500/30 transition-colors group-hover:bg-gold-500/15">
-            <BookOpen className="h-4 w-4 text-gold-500" />
-          </div>
-          <div className="flex flex-col leading-none">
-            <span className="font-amharic text-[15px] font-semibold text-text-primary">
-              ካተና
-            </span>
-            <span className="font-latin text-[10px] uppercase tracking-wider text-text-faint">
-              Catena
-            </span>
-          </div>
-        </Link>
+          <Link to="/" aria-label="ካተና — መነሻ" className="flex items-center">
+            <Logo size="lg" />
+          </Link>
+        </div>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        {/* CENTER: desktop nav */}
+        <nav className="hidden md:flex items-center justify-center gap-1">
           {navItems.map((item) => {
             const active =
               item.to === "/"
@@ -76,20 +68,27 @@ export function Header() {
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "rounded-md px-3 py-1.5 font-amharic text-sm transition-colors",
+                  "relative rounded-md px-3 py-1.5 font-amharic text-sm transition-colors",
                   active
-                    ? "bg-surface-raised text-text-primary"
+                    ? "text-brand"
                     : "text-text-secondary hover:bg-surface-raised/60 hover:text-text-primary",
                 )}
               >
                 {item.label}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-brand transition-opacity duration-200",
+                    active ? "opacity-100" : "opacity-0",
+                  )}
+                />
               </Link>
             );
           })}
         </nav>
 
-        {/* Right actions */}
-        <div className="ml-auto flex items-center gap-2">
+        {/* RIGHT: actions */}
+        <div className="flex items-center justify-end gap-2">
           <Link
             to="/search"
             className="rounded-md p-2 text-text-secondary transition-colors hover:bg-surface-raised hover:text-text-primary"

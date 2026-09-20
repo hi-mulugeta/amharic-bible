@@ -11,7 +11,7 @@ export function HomePage() {
   const { translationCode } = useReaderStore();
 
   return (
-    <div className="mx-auto max-w-reader px-5 py-10 md:px-8 md:py-14">
+    <div className="mx-auto max-w-reader px-5 py-10 md:max-w-shell md:px-12 md:py-17 lg:px-20">
       {/* Greeting + fasting status */}
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

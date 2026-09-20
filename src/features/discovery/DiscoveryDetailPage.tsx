@@ -111,7 +111,7 @@ function DiscoveryDetailShell({
   onPageChange: (p: number) => void;
 }) {
   return (
-    <div className="mx-auto max-w-reader px-5 py-10 md:px-8 md:py-14">
+    <div className="mx-auto max-w-reader px-5 py-10 md:max-w-shell md:px-12 md:py-17 lg:px-20">
       <Link
         to={backTo}
         className="inline-flex items-center gap-1.5 text-[13px] text-text-muted transition-colors hover:text-text-primary"

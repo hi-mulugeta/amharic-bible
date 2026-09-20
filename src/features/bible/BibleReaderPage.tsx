@@ -140,6 +140,11 @@ export function BibleReaderPage() {
   }, [navQuery.data, navigate]);
 
   const handleSelectVerse = (v: VerseOut) => {
+    // Clicking the already-selected verse closes the panel
+    if (selectedVerseId === v.id && commentaryOpen) {
+      setCommentaryOpen(false);
+      return;
+    }
     selectVerse(v.id);
     setCommentaryOpen(true);
   };
@@ -156,10 +161,10 @@ export function BibleReaderPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-shell">
+    <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-shell">
       {/* Left: Book sidebar (desktop) */}
       <aside className="hidden w-64 shrink-0 border-r border-surface-border lg:block">
-        <div className="sticky top-14 h-[calc(100vh-3.5rem)]">
+        <div className="sticky top-16 h-[calc(100vh-4rem)]">
           <BookSidebar currentSlug={bookSlug} currentChapter={chapter} />
         </div>
       </aside>
@@ -168,7 +173,7 @@ export function BibleReaderPage() {
       <main className="min-w-0 flex-1">
         {/* Sticky audio player — pinned below navbar, full width of reading column */}
         {chapterAudio.data && (
-          <div className="sticky top-14 z-30 w-full border-b border-surface-border bg-surface/95 backdrop-blur-sm">
+          <div className="sticky top-16 z-30 w-full border-b border-surface-border bg-surface/95 backdrop-blur-sm">
             <AudioPlayer
               audio={chapterAudio.data}
               resetKey={`${bookSlug}/${chapter}`}
@@ -238,7 +243,7 @@ export function BibleReaderPage() {
         )}
       >
         {commentaryOpen && selectedVerse && (
-          <div className="sticky top-14 h-[calc(100vh-3.5rem)]">
+          <div className="sticky top-16 h-[calc(100vh-4rem)]">
             <CommentaryPanel
               verse={selectedVerse}
               onClose={() => setCommentaryOpen(false)}
@@ -253,7 +258,7 @@ export function BibleReaderPage() {
           <Dialog.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm lg:hidden" />
           <Dialog.Content className="fixed inset-y-0 left-0 z-50 w-72 border-r border-surface-border bg-stone-950 lg:hidden animate-fade-in">
             <Dialog.Title className="sr-only">መጻሕፍት</Dialog.Title>
-            <div className="flex h-full flex-col pt-14">
+            <div className="flex h-full flex-col pt-16">
               <BookSidebar
                 currentSlug={bookSlug}
                 currentChapter={chapter}

@@ -30,7 +30,7 @@ export function AuthorsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-shell px-5 py-10 md:px-8 md:py-14">
+    <div className="mx-auto max-w-reader px-5 py-10 md:max-w-shell md:px-12 md:py-17 lg:px-20">
       <header className="mb-8">
         <h1 className="font-amharic text-2xl md:text-3xl font-semibold text-text-primary">
           የቤተ ክርስቲያን አበው
